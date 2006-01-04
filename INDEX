@@ -1,0 +1,11 @@
+Halftimes                Half-times for Standard Haldane Models
+Mvalues.ata              M-values for Standard Haldane Models
+dive                     Define a Dive Profile
+ead                      Equivalent Air Depth
+haldane                  Tissue Saturation by Haldane Model
+maxmix                   Optimal Nitrox Mixture For Given Depth
+mod                      Maximum Operating Depth
+oxtox                    Pulmonary Oxygen Toxicity
+plot.dive                Plot a Dive Profile
+scuba.disclaimer         Disclaimer for Scuba Library
+scuba-internal           Internal scuba functions
