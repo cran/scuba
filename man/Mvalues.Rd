@@ -1,32 +1,48 @@
 \name{Mvalues}
 \alias{Mvalues}
-\alias{Mvalues.ata}
-\alias{Mvalues.fsw}
 \title{
   M-values for Standard Haldane Models
 }
 \description{
-  Contains the surface M-values (maximum surfacing nitrogen tensions)
+  Contains the surfacing M-values (maximum surfacing nitrogen tensions)
   for several Haldane-type decompression models.
-} 
+}
+\details{
+  The surfacing M-value (in the terminology of Workman) is the
+  maximum partial pressure of inert gas in a tissue compartment
+  which would be tolerated without symptoms of decompression sickness
+  at an ambient pressure of 1 atmosphere.
+
+  This dataset gives the surfacing M-values for nitrogen in each tissue,
+  in several of the classical decompression models, as
+  tabulated by Bookspan (1995, page 23).
+}
 \format{
-  A list of vectors. The components are named
-  \describe{
-    \item{USN}{US Navy}
-    \item{DSAT}{model for DSAT (PADI) tables}
+  A list with two components called \code{ata} and \code{fsw},
+  giving the surfacing M-values in atmospheres absolute
+  (\code{ata}) or in equivalent feet of seawater (\code{fsw})
+  respectively.
+  Each component is a list of three vectors, named
+  \tabular{ll}{
+    \code{Haldane} \tab J.S. Haldane's original model \cr
+    \code{USN} \tab original US Navy model \cr
+    \code{DSAT} \tab model for DSAT (PADI) tables
   }
-  Each vector gives the M-values in atmospheres absolute
-  (\code{Mvalues.ata}) or in equivalent feet of seawater (\code{Mvalues.fsw})
-  for the tissues in the relevant model, listed from fastest to slowest.
+  containing the M-values for the 
+  tissues in the relevant model, listed from fastest to slowest.
+  The tissues correspond to the tissues in the dataset
+  \code{\link{Halftimes}}.
 }
 \examples{
-  Mvalues.ata[["USN"]]
-  Mvalues.ata[["DSAT"]]
-  Mvalues.fsw[["USN"]]
-  Mvalues.fsw[["DSAT"]]
+  data(Mvalues)
+  Mvalues$fsw$USN
+  Mvalues$ata$DSAT
 }
-\source{Jolie Bookspan's book}
-\section{Notes}{
+\seealso{
+  \code{\link{Halftimes}}
+}
+\source{
+  Bookspan (1995), p 23.
 }
 \references{
   Bookspan, J. (1995) Diving physiology in plain English.

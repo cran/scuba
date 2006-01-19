@@ -42,6 +42,9 @@ The Scuba Package
   by typing its name \code{d}, or by typing
   \code{print(d,seconds=FALSE)} to print times to the nearest minute,
   as explained in the help entry for \code{\link{print.dive}}.
+  A summary of the dive (with such information as the average depth,
+  maximum depth and the main stages of the dive) can be printed
+  by typing \code{summary(d)}.
 
   By default, the function \code{dive} fills in some details
   about the dive. It assumes that the diver breathes compressed air;
@@ -61,7 +64,9 @@ The Scuba Package
   of the DSAT model. You can choose other compartment models;
   for example to use the classical US Navy model,
   type \code{haldane(d, Halftimes[["USN"]])}. For other
-  alternatives, see \code{\link{Halftimes}}.
+  alternative compartment models,
+  see \code{\link{Halftimes}}, \code{\link{Workman65}}
+  or \code{\link{BuehlmannL16A}}.
 
   To inspect the tissue tensions during the dive,
   use the interactive function \code{\link{showstates}}.
@@ -82,7 +87,11 @@ The Scuba Package
   Nitrox mixtures (mixtures of oxygen and nitrogen) can be
   represented using the function \code{\link{nitrox}}.
   For example, EAN 32 is represented by \code{nitrox(0.32)}.
-  Standard nitrox calculations are available, for example
+
+  There are methods for \code{print} and \code{summary}
+  for gas objects.
+  
+  Standard nitrox calculations are also available, for example
   \tabular{ll}{
     \code{\link{ead}} \tab
     equivalent air depth\cr

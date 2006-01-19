@@ -1,7 +1,7 @@
 #
 # 	scuba.R
 #
-#	$Revision: 1.10 $	$Date: 2006/01/04 04:02:59 $
+#	$Revision: 1.13 $	$Date: 2006/01/11 01:53:42 $
 #
 ###################################################################
 #  
@@ -123,15 +123,54 @@ print.dive <- function(x, ..., seconds=TRUE) {
     cat("gas: air\n")
     print(data.frame(time=watchtimes, depth=depths))
   } else {
-    gasnames <- unlist(lapply(x$gases,
-                function(g) if(is.air(g)) "air" else paste("EAN", g$fO2)))
+    gasnames <- unlist(lapply(x$gases, function(g) { summary(g)$name }))
     print(data.frame(time=watchtimes, depth=paste(depths), gas=c(gasnames, "")),
           quote=FALSE)
   }
   invisible(NULL)
 }
 
-
+summary.dive <- function(object, ...) {
+  depths <- depths.dive(object)
+  times <- times.dive(object)
+  n <- length(depths)
+  totaltime <- times[n]
+  durations <- diff(times)
+  middepths <- (depths[-1] + depths[-n])/2
+  meandepth <- sum(durations * middepths)/totaltime
+  gasnames <- unlist(lapply(object$gases, function(g) { summary(g)$name }))
+  flat <- (diff(depths) == 0)
+  stages <- data.frame(depth=depths[flat],
+                       time=durations[flat],
+                       gas=gasnames[flat])
+  z <- list(depths=depths,
+            times=times,
+            totaltime=totaltime,
+            stages=stages,
+            maxdepth=max(depths),
+            meandepth=meandepth,
+            airdive=object$airdive,
+            gasnames=gasnames)
+  class(z) <- c("summary.dive", class(z))
+  return(z)
+}
+  
+print.summary.dive <- function(x, ...) {
+  cat(paste("Dive to", x$maxdepth, "metres"))
+  if(x$airdive)
+    cat(" on air\n")
+  else 
+    cat(paste("\nGases:", paste(unique(x$gasnames), collapse=", "), "\n"))
+  cat(paste("Total dive time:", round(x$totaltime,1), "minutes\n"))
+  cat("Stages:\n")
+  if(x$airdive)
+    print(x$stages[,1:2])
+  else
+    print(x$stages)
+  cat(paste("\nMean depth", round(x$meandepth,1), "metres\n"))
+  return(invisible(NULL))
+}
+  
 ###################################################################
 #  Gases
 #
@@ -151,17 +190,26 @@ air <- nitrox(0.21)
 is.air <- function(g) { g$fO2 == 0.21 }
 
 print.gas <- function(x, ...) {
-  name <- if(is.air(x)) "air" else paste("EAN", x$fO2)
+  name <- if(is.air(x)) "air" else if(x$fO2 == 1) "100\% O2" else paste("EAN", x$fO2)
   cat(paste(name, "\n"))
   invisible(NULL)
 }
 
 summary.gas <- function(object, ...) {
   fo <- object$fO2
-  name <- if(is.air(object)) "air" else paste("EAN", fo)
-  cat(paste(name, "\t(",
-            100 * fo, "% oxygen, ",
-            100 * (1-fo), "% nitrogen)\n", sep=""))
+  na <- if(is.air(object)) "air" else if(fo == 1) "100\% O2" else paste("EAN", fo)
+  mo <- mod(object, ppO2max=1.4)
+  mo <- round(mo, 1)
+  z <- list(name=na, fO2=fo, fN2=1-fo, mod=mo)
+  class(z) <- c("summary.gas", class(z))
+  return(z)
+}
+
+print.summary.gas <- function(x, ...) {
+  cat(paste(x$name, "\t(",
+            100 * x$fO2, "% oxygen, ",
+            100 * x$fN2, "% nitrogen)\n", sep=""))
+  cat(paste("Maximum operating depth", x$mod, "metres\n"))
   return(invisible(NULL))
 }
 
@@ -218,7 +266,7 @@ timetaken <- function(start, finish, uprate, downrate) {
 #
 "haldane" <- 
 function(d,
-	 halftimes=Halftimes[["DSAT"]], 
+	 halftimes={ data(Halftimes); Halftimes$DSAT}, 
 	 prevstate=rep(0.79,length(halftimes))) 
 {
   stopifnot(is.dive(d))
@@ -391,21 +439,54 @@ chop.dive <- function(d, tim) {
 #  Interactive display
 #
 
-showstates <- function(d, tissues="DSAT") {
+showstates <- function(d, model="DSAT") {
   stopifnot(is.dive(d))
+  stopifnot(is.character(model))
 
-  if(!is.character(tissues))
-    stop("\"tissues\" should be a character vector")
-  if(!(tissues %in% names(Halftimes)))
-    stop("Halftimes for", sQuote(tissues), "not available")
-  HalfT <- Halftimes[[tissues]]
-  if(!(tissues %in% names(Mvalues.ata)))
-    stop("M-values for", sQuote(tissues), "not available")
-  Mvals <- Mvalues.ata[[tissues]]
+  switch(model,
+         DSAT={  
+           data(Halftimes)
+           data(Mvalues)
+           HalfT <- Halftimes$DSAT
+           Mvals <- Mvalues$ata$DSAT
+         },
+         USN={  
+           data(Halftimes)
+           data(Mvalues)
+           HalfT <- Halftimes$USN
+           Mvals <- Mvalues$ata$USN
+         },
+         Workman={
+           data(Workman65)
+           HalfT <- Workman65$halftime
+           Mvals <- Workman65$M0/scuba.constants$msw.per.atm
+         },
+         "ZH-L16A"={
+           data(BuehlmannL16A)
+           HalfT <- BuehlmannL16A$halftime
+           Mvals <- eval(expression(a + 1/b), envir=BuehlmannL16A)
+         },
+         stop(paste("Unrecognised model", sQuote(model)))
+         )
+         
   
   oldpar <- par(mfrow=c(1,2))
   frame()
   plot(d)
+
+  # determine (approx) maximum relative saturation over entire dive
+  # so that barplot scale is fixed
+  
+  maxrelsat <- 1
+  for(ti in times.dive(d))
+    if(ti > 0) {
+      div <- chop.dive(d, ti)
+      hal <- haldane(div, halftimes=HalfT)
+      rel <- hal/Mvals
+      maxrelsat <- max(max(rel), maxrelsat)
+    }
+
+  # loop ..
   
   while(length(xy <- locator(1)) > 0) {
     tim <- xy$x
@@ -418,11 +499,11 @@ showstates <- function(d, tissues="DSAT") {
       rel <- hal/Mvals
       otu <- oxtox(div)
       barplot(rel,
-              xlab=paste("Tissues (", tissues, ")", sep=""),
+              xlab=paste("Tissues (", model, ")", sep=""),
               ylab="Relative saturation",
               main=paste("Time=", round(tim), "min\n",
                           "Accumulated oxygen toxicity", round(otu, 1)),
-              ylim=range(c(0, 1, range(rel))),
+              ylim=range(c(0, maxrelsat)),
               names.arg=c("Fast", rep("", length(rel)-2), "Slow"))
       abline(h=1, lty=3, col="red")
       plot(d)

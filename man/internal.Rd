@@ -1,31 +1,37 @@
 \name{scuba-internal}
-\alias{is.dive}
-\alias{depths.dive}
-\alias{times.dive}
-\alias{is.gas}
-\alias{print.gas}
-\alias{summary.gas}
-\alias{is.rate}
-\alias{rate}
-\alias{print.rate}
-\alias{timetaken}
 \alias{chop.dive}
+\alias{depths.dive}
+\alias{is.dive}
+\alias{is.gas}
+\alias{is.rate}
+\alias{print.gas}
+\alias{print.rate}
+\alias{print.summary.dive}
+\alias{print.summary.gas}
+\alias{rate}
+\alias{summary.dive}
+\alias{summary.gas}
+\alias{times.dive}
+\alias{timetaken}
 \title{Internal scuba functions}
 \description{
   Internal scuba functions.
 }
 \usage{
+chop.dive(d, tim)
+depths.dive(d)
 is.dive(x)
 is.gas(x)
 is.rate(x)
-depths.dive(d)
-times.dive(d)
 print.gas(x, \dots)
-summary.gas(object, \dots)
-rate(speed, time, up)
 print.rate(x, \dots)
+print.summary.dive(x, \dots)
+print.summary.gas(x, \dots)
+rate(speed, time, up)
+summary.dive(object, \dots)
+summary.gas(object, \dots)
+times.dive(d)
 timetaken(start, finish, uprate, downrate)
-chop.dive(d, tim)
 }
 
 \details{

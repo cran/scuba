@@ -7,7 +7,7 @@
 }
 \usage{
   haldane(d,
-	 halftimes=Halftimes[["DSAT"]], 
+	 halftimes={ data(Halftimes); Halftimes$DSAT}, 
 	 prevstate=rep(0.79,length(halftimes)))
 }
 \arguments{
@@ -58,7 +58,7 @@
   barplot(s1)
   # Look at saturation (in \% of maximum)
   data(Mvalues)
-  barplot(100 * s1/Mvalues.ata[["DSAT"]])
+  barplot(100 * s1/Mvalues$ata$DSAT, ylab="Relative saturation", xlab="Tissues")
   # Evaluate saturation after 2 hour surface interval
   s2 <- haldane(dive(c(0,120)), prevstate=s1)
   # Then after another dive to 18 m for 30 min with safety stop

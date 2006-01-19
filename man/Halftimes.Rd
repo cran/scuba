@@ -9,29 +9,28 @@
 } 
 \format{
   A list of vectors. The components are named
-  \describe{
-    \item{Haldane}{J.S. Haldane's original model halftimes}
-    \item{USN}{US Navy}
-    \item{DSAT}{model for DSAT (PADI) tables}
-    \item{OrcaEdge}{model for Dacor Orca Edge dive computer}
-    \item{MicroBrain}{model for Beuchat MicroBrain dive computer}
-    \item{Aladin}{model for Uwatec Aladin dive computer}
-    \item{Buehlmann.ZHL.12}{Buehlmann's ZHL.12 model}
+  \tabular{ll}{
+    \code{Haldane} \tab J.S. Haldane's original model halftimes\cr
+    \code{USN} \tab US Navy \cr
+    \code{DSAT} \tab model for DSAT (PADI) tables \cr
+    \code{OrcaEdge} \tab model for Dacor Orca Edge dive computer \cr
+    \code{MicroBrain} \tab model for Beuchat MicroBrain dive computer \cr
+    \code{Aladin} \tab model for Uwatec Aladin dive computer \cr
+    \code{ZHL12} \tab Buehlmann's ZH-L12 model 
   }
-  Each vector gives the halftimes in minutes
+  Each vector gives the nitrogen halftimes in minutes
   for the tissues in the relevant model, listed from fastest to slowest.
 }
 \examples{
-  Halftimes[["Haldane"]]
+  data(Halftimes)
+  Halftimes$Haldane
   Halftimes[["USN"]]
-  Halftimes[["DSAT"]]
-  Halftimes[["OrcaEdge"]]
-  Halftimes[["MicroBrain"]]
-  Halftimes[["Aladin"]]
-  Halftimes[["Buehlmann.ZHL.12"]]
 }
-\source{Jolie Bookspan's book}
-\section{Notes}{
+\source{
+  Bookspan (1995) p 16.
+}
+\seealso{
+  \code{\link{Mvalues}}
 }
 \references{
   Bookspan, J. (1995) Diving physiology in plain English.

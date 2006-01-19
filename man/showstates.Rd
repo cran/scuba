@@ -6,14 +6,16 @@
   saturation state at any intermediate stage indicated by the mouse.
 }
 \usage{
- showstates(d, tissues="DSAT")
+ showstates(d, model="DSAT")
 }
 \arguments{
   \item{d}{
     The dive. An object of class \code{"dive"}.
   }
-  \item{tissues}{
-    Either \code{"DSAT"} or \code{"USN"} indicating the model.
+  \item{model}{
+    The name of a decompression model:
+    one of \code{"DSAT"}, \code{"USN"},
+    \code{"Workman"} or \code{"ZH-L16A"}.
   }
 }
 \value{
@@ -30,6 +32,19 @@
   in the tissues at the indicated time, using \code{\link{haldane}},
   and plots them as a bar graph. The cumulative oxygen toxicity is also
   computed using \code{\link{oxtox}}.
+
+  Note that the bar graph shows the \emph{relative} nitrogen tensions in each
+  compartment, that is, the tissue nitrogen tension divided by the
+  "surfacing M-value" (tissue maximum nitrogen tension for a
+  no-decompression dive at sea level). 
+  
+  If \code{model} is \code{"DSAT"} or \code{"USN"}, the model parameters
+  are extracted from the corresponding entries in the datasets
+  \code{\link{Halftimes}} and \code{\link{Mvalues}}. If \code{model="Workman"}
+  the model parameters are extracted from the
+  dataset \code{\link{Workman65}}. If \code{model="ZH-L16A"}
+  the model parameters are extracted from the
+  dataset \code{\link{BuehlmannL16A}}.
 }
 \seealso{
   \code{\link{dive}},
