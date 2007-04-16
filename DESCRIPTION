@@ -1,6 +1,6 @@
 Package: scuba
-Version: 1.1-5
-Date: 19 January 2006
+Version: 1.1-6
+Date: 16 April 2007
 Title: Scuba diving calculations and decompression models
 Author: Adrian Baddeley <adrian@maths.uwa.edu.au> 
 Maintainer: Adrian Baddeley <adrian@maths.uwa.edu.au>
@@ -8,4 +8,4 @@ Depends: R (>= 2.0.0)
 Description: dive profiles, decompression models and gas calculations
 	for scuba diving
 License: GPL version 2 or newer
-Packaged: Wed Jan 18 18:24:45 2006; adrian
+Packaged: Mon Apr 16 15:08:17 2007; adrian

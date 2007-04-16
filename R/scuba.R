@@ -1,7 +1,7 @@
 #
 # 	scuba.R
 #
-#	$Revision: 1.13 $	$Date: 2006/01/11 01:53:42 $
+#	$Revision: 1.14 $	$Date: 2007/04/16 07:08:08 $
 #
 ###################################################################
 #  
@@ -190,14 +190,14 @@ air <- nitrox(0.21)
 is.air <- function(g) { g$fO2 == 0.21 }
 
 print.gas <- function(x, ...) {
-  name <- if(is.air(x)) "air" else if(x$fO2 == 1) "100\% O2" else paste("EAN", x$fO2)
+  name <- if(is.air(x)) "air" else if(x$fO2 == 1) "100% O2" else paste("EAN", 100 * x$fO2, "%")
   cat(paste(name, "\n"))
   invisible(NULL)
 }
 
 summary.gas <- function(object, ...) {
   fo <- object$fO2
-  na <- if(is.air(object)) "air" else if(fo == 1) "100\% O2" else paste("EAN", fo)
+  na <- if(is.air(object)) "air" else if(fo == 1) "100% O2" else paste("EAN", 100 * fo, "%")
   mo <- mod(object, ppO2max=1.4)
   mo <- round(mo, 1)
   z <- list(name=na, fO2=fo, fN2=1-fo, mod=mo)
