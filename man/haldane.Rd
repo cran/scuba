@@ -3,12 +3,13 @@
 \title{Tissue Saturation by Haldane Model}
 \description{
   Computes a diver's nitrogen saturation 
-  after a dive, as predicted by a Haldane model.
+  during and after a dive, as predicted by a Haldane model.
 }
 \usage{
   haldane(d,
 	 halftimes={ data(Halftimes); Halftimes$DSAT}, 
-	 prevstate=rep(0.79,length(halftimes)))
+	 prevstate=rep(0.79,length(halftimes)),
+         progressive=FALSE)
 }
 \arguments{
   \item{d}{
@@ -25,11 +26,24 @@
     Default is to assume the diver is ``desaturated'' (in equilibrium
     with air at sea level) at start of dive.
   }
+  \item{progressive}{
+    Logical flag. If \code{TRUE}, the tissue saturations are computed
+    at every time point during the dive. If \code{FALSE}, only the
+    final tissue saturation at the end of the dive is computed.
+  }
 }
 \value{
-  Vector giving the diver's nitrogen saturation state at the end of the
+  If \code{progressive=FALSE}, a vector giving
+  the diver's nitrogen saturation state at the end of the
   dive. Each entry is the nitrogen tension (in atmospheres absolute) of
   the compartment.
+
+  If \code{progressive=TRUE}, a data frame giving
+  the diver's nitrogen saturation state at each time point during the
+  dive. The rows of the data frame correspond to successive time points
+  during the dive (the times can be extracted by \code{\link{times.dive}}).
+  The columns correspond to the tissue compartments.
+  The entries are nitrogen tensions (in atmospheres absolute).
 }
 \details{
   Henry's Law is applied 

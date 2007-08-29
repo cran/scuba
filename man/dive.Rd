@@ -49,6 +49,16 @@
       \code{\link{descent}}. This resets the default
       rate of ascent or descent.
     }
+    \item{a data frame with 2 columns}{
+      containing a dive profile, usually uploaded from a dive computer. The
+      first column should contain the \emph{elapsed} times, and the second
+      column contains the depths (in metres) measured at these times.
+      The column of elapsed times can be either a character vector
+      containing times in minutes-and-seconds format \code{mm:ss},
+      or an integer vector containing elapsed times in \bold{seconds},
+      or a vector of class \code{\link{difftime}}
+      representing elapsed times in any time unit.
+    }
   }
   Dives are assumed to start and finish at the surface.
 
@@ -92,6 +102,11 @@
   # ASCENT RATES
   # Ascent rate 18 m/min below 9 metres, 6m/min above 9 metres
   d <- dive(c(30, 12), ascent(18), 9, ascent(6), c(5,3))
+
+  # UPLOADED DIVE PROFILE
+  data(baron)
+  pro <- baron[, 1:2]
+  d <- dive(pro)
 }
 \author{Adrian Baddeley
   \email{adrian@maths.uwa.edu.au}

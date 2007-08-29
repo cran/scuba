@@ -6,15 +6,26 @@
   dive profile and breathing gas (air or nitrox).
 }
 \usage{
-  oxtox(d)
+  oxtox(d, progressive=FALSE)
 }
 \arguments{
   \item{d}{
     The dive profile. An object of class \code{"dive"}.
   }
+  \item{progressive}{
+    Logical flag. If \code{FALSE}, the total oxygen toxicity from the
+    dive is calculated. If \code{TRUE}, the cumulative oxygen toxicity
+    at each time point during the dive is calculated.
+  }
 }
 \value{
-  The pulmonary oxygen toxicity dose in OTU.
+  If \code{progressive=FALSE}, a single numeric value,
+  the total pulmonary oxygen toxicity dose in OTU.
+
+  If \code{progressive=TRUE}, a numeric vector containing the 
+  cumulative pulmonary oxygen toxicity dose in OTU at each
+  time point during the dive. The corresponding time points can be
+  extracted by \code{\link{times.dive}}.
 }
 \details{
   Computes the total dose of pulmonary oxygen toxicity

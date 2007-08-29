@@ -133,6 +133,21 @@ The Scuba Package
   The total oxygen toxicity incurred by a diver on
   any Nitrox dive can be calculated using \code{\link{oxtox}}.
 }
+\section{Uploaded Dive Profiles}{
+  Dive profiles may also be uploaded from your dive computer
+  and studied in the \pkg{scuba} package. First convert the
+  uploaded profile data to a \code{data.frame} with two columns,
+  the first column containing the elapsed time and the second column
+  containing the depth (in metres) recorded at each time. The elapsed
+  times can be either a character vector in minutes-and-seconds format
+  \code{mm:ss}, or a vector of integer times measured in \emph{seconds}
+  of elapsed time, or an object of class \code{\link{difftime}}
+  containing the elapsed times in any time unit. Then pass this data
+  frame as an argument to the function \code{\link{dive}}.
+
+  An example of a real dive profile is provided in the
+  \code{\link{baron}} dataset.
+}
 \section{Licence}{
   This library and its documentation are usable under the terms of the "GNU 
   General Public License", a copy of which is distributed with the package.

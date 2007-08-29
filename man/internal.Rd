@@ -4,6 +4,7 @@
 \alias{is.dive}
 \alias{is.gas}
 \alias{is.rate}
+\alias{nitroxname}
 \alias{print.gas}
 \alias{print.rate}
 \alias{print.summary.dive}
@@ -23,6 +24,7 @@ depths.dive(d)
 is.dive(x)
 is.gas(x)
 is.rate(x)
+nitroxname(fO2)
 print.gas(x, \dots)
 print.rate(x, \dots)
 print.summary.dive(x, \dots)

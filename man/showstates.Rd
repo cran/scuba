@@ -15,7 +15,8 @@
   \item{model}{
     The name of a decompression model:
     one of \code{"DSAT"}, \code{"USN"},
-    \code{"Workman"} or \code{"ZH-L16A"}.
+    \code{"Workman"} or \code{"ZH-L16A"}
+    (partially matched).
   }
 }
 \value{
@@ -53,7 +54,7 @@
 }
 \examples{
   \dontrun{
-    showstates(dive(c(30,20)))
+    showstates(dive(c(30,20)), "ZH")
   }
 }
 \author{Adrian Baddeley

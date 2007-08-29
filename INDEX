@@ -1,5 +1,6 @@
 air                     Air
 ascent                  Ascent Rate or Time
+baron                   Real Scuba Dive Profile
 BuehlmannL16A           Decompression model ZH-L16A
 descent                 Descent Rate or Time
 dive                    Define a Dive Profile

@@ -1,7 +1,7 @@
 #
 # 	scuba.R
 #
-#	$Revision: 1.14 $	$Date: 2007/04/16 07:08:08 $
+#	$Revision: 1.26 $	$Date: 2007/08/29 18:30:04 $
 #
 ###################################################################
 #  
@@ -11,61 +11,108 @@
 #      dive(c(21,30),c(5,5),c(0,120),c(18,30),c(5,5))
 #	  means: 21 m for 30 min, 5@5, 2 hour surface, 18 m for 30 min, 5@5
 #
-#      dive(c(25,30,0.32))  means EANx 32
+#      dive(nitrox(0.32), c(25,30), 5, nitrox(0.5), c(5,5))
+#                 means dive on EANx 32 to 25 metres for 30 min,
+#                 ascending to 5 metres, switching to EANx 50,
+#                 5@5 then surfacing.
 #
 dive <- function(...) {
   X <- list(...)
-  # vectors describing the dive
-  times <- 0     # start at time zero
-  depths <- 0    # start at surface
-  current <- 1
-  gases <- list() # gas for first interval not yet determined
-  # current values
-  gas.current <- air
+  
+  # initialise current state and rules
+  state <- data.frame(time=0, depth=0, fO2=air$fO2, fN2=air$fN2)
   rate.down <- descent(30)  # default descent rate
   rate.up <- ascent(18)    # default ascent rate
+  
+  # set up data frame to record the entire dive profile
+  # NB: gas fractions apply to the time interval [i,i+1]
+  df <- state
+  now <- 1
+
+  change <- function(state, duration=NULL, depth=NULL, fO2=NULL, fN2=NULL) {
+    if(!is.null(duration)) state$time <- state$time + duration
+    if(!is.null(depth))    state$depth <- depth
+    if(!is.null(fO2))      state$fO2 <- fO2
+    if(!is.null(fN2))      state$fN2 <- fN2
+    return(state)
+  }
+  
   # examine arguments
   for(i in seq(X)) {
     Y <- X[[i]]
     if(is.rate(Y)) # change the ascent or descent rate
       if(Y$up) rate.up <- Y else rate.down <- Y
-    else if(is.gas(Y)) # switch to new gas
-      gas.current <- Y
-    else if(is.vector(Y)) {
+    else if(is.gas(Y)) { # switch to new gas for next time interval
+      state <- change(state, fO2=Y$fO2, fN2=Y$fN2)
+      df[now, ] <- state
+    } else if(is.vector(Y)) {
+      if(length(Y) > 2)
+        stop("Vector of length > 2 is not a recognised format")
       newdepth <- Y[1]
-      # First ascend or descend to this depth
-      if(newdepth != depths[current]) {
-        duration <- timetaken(depths[current], newdepth, rate.up, rate.down)
-        gases[[current]] <- gas.current
-        times <- c(times, times[current] + duration)
-        depths <- c(depths, newdepth)
-        current <- current + 1
+      # First ascend or descend to this depth (making new waypoint)
+      if(newdepth != state$depth) {
+        duration <- timetaken(state$depth, newdepth, rate.up, rate.down)
+        state <- change(state, duration, newdepth)
+        df <- rbind(df, state)
+        now <- now + 1
       }
-      # Now stay at this depth for the specified time
+      # Now stay at this depth for the specified time (making new waypoint)
       if(length(Y) > 1) {
         duration <- Y[2]
-        gases[[current]] <- gas.current
-        times <- c(times, times[current] + duration)
-        depths <- c(depths, depths[current])
-        current <- current + 1
+        state <- change(state, duration)
+        df <- rbind(df, state)
+        now <- now + 1
       }
-    }
+    } else if(is.data.frame(Y)) {
+      if(ncol(Y) != 2)
+        stop("Data frame should have 2 columns")
+      newtimes <- Y[,1]
+      newdepths <- Y[,2]
+      nsteps <- nrow(Y)
+
+      if(inherits(newtimes, "difftime")) {
+        # convert to minutes
+        units(newtimes) <- "mins"
+        newtimes <- as.numeric(newtimes)
+      } else if(is.numeric(newtimes)) {
+        # assume seconds -- convert to minutes
+        message("Elapsed times are assumed to be given in seconds")
+        newtimes <- newtimes/60
+      } else if(is.character(newtimes)) {
+        # assume mm:ss format
+        newtimes <- as.difftime(newtimes, format="%M:%S")
+        units(newtimes) <- "mins"
+        newtimes <- as.numeric(newtimes)
+      } else 
+        stop("Unknown format for elapsed times")
+      
+      if(!all(diff(newtimes) > 0))
+        stop("Elapsed times are not an increasing sequence")
+
+      newdf <- data.frame(depth=newdepths,
+                          time=newtimes,
+                          fO2=state$fO2,
+                          fN2=state$fN2)
+      df <- rbind(df, newdf)
+      now <- now + nsteps
+      state <- df[now, ]
+    } else
+    stop(paste("The format of argument", i, "is not recognised\n"))
   }
-  if(depths[current] > 0) {
+  if(state$depth > 0) {
     # Don't forget to surface...
-    gases[[current]] <- gas.current
-    duration <- timetaken(depths[current], 0, rate.up, rate.down)
-    times <- c(times, times[current] + duration)
-    depths <- c(depths, 0)
-    current <- current + 1
+    duration <- timetaken(state$depth, 0, rate.up, rate.down)
+    state <- change(state, duration, 0)
+    df <- rbind(df, state)
+    now <- now + 1
   }
   # was it an air dive?
-  airdive <- all(unlist(lapply(gases, is.air)))
-  
+  airdive <- all(df$fO2 == air$fO2)
+
   # dive depth/time profile
-  pro <- approxfun(times, depths, method="linear", rule=2, ties="ordered")
+  pro <- approxfun(df$time, df$depth, method="linear", rule=2, ties="ordered")
   # 
-  result <- list(profile=pro, gases=gases, airdive=airdive)
+  result <- list(profile=pro, data=df, airdive=airdive)
   class(result) <- c("dive", class(result))
   return(result)
 }
@@ -80,20 +127,29 @@ times.dive <- function(d) {
   eval(expression(x), env=environment(d$profile))
 }
   
-plot.dive <- function(x, ..., main=deparse(substitute(x)), verticals=TRUE) {
+plot.dive <- function(x, ...,
+                      main=deparse(substitute(x)),
+                      show.gases=TRUE, verticals=TRUE) {
   times <- times.dive(x)
   depths <- depths.dive(x)
-  plot(times, -depths, type="o", main=main,
-       axes=FALSE,
-       xlab="Time (minutes)", ylab="Depth (metres)", lwd=2, ...)
+  if(mean(diff(times)) <= 1) {
+    show.gases <- FALSE
+    plot.type <- "l"
+  } else 
+    plot.type <- "o"
+  myplot <- function(x, y, main, ..., type=plot.type, axes=FALSE,
+                     xlab="Time (minutes)", ylab="Depth (metres)", lwd=2) {
+    plot(x, y, main=main, type=type, axes=axes,
+         xlab=xlab, ylab=ylab, lwd=lwd, ...)
+  }
+  myplot(times, -depths, main=main, ...)
   axis(1, at=pretty(range(times)))
   yp <- pretty(range(depths))
   axis(2, at=-yp, labels=paste(yp))
 
-  if(!x$airdive) {
-    isair <- unlist(lapply(x$gases, is.air))
-    fO2 <- unlist(lapply(x$gases, function(g) { g$fO2 }))
-    labels <- ifelse(isair, "air", paste("EAN ", round(100 * fO2)))
+  if(show.gases && !x$airdive) {
+    fO2 <- x$data$fO2
+    labels <- nitroxname(fO2)
     rates <- abs(diff(depths)/diff(times))
     aspect <- diff(range(depths))/diff(range(times))
     vertical <- (rates > 2 * aspect)
@@ -115,7 +171,8 @@ print.dive <- function(x, ..., seconds=TRUE) {
     mins <- floor(times)
     secs <- floor((times * 60) %% 60)
     watchtimes <- paste(mins, ":",
-                      ifelse(secs== 0, "00", paste(secs)), sep="")
+                        ifelse(secs < 10, "0", ""),
+                        secs, sep="")
   } else 
     watchtimes <- paste(round(times))
   
@@ -123,11 +180,17 @@ print.dive <- function(x, ..., seconds=TRUE) {
     cat("gas: air\n")
     print(data.frame(time=watchtimes, depth=depths))
   } else {
-    gasnames <- unlist(lapply(x$gases, function(g) { summary(g)$name }))
-    print(data.frame(time=watchtimes, depth=paste(depths), gas=c(gasnames, "")),
-          quote=FALSE)
+    fO2 <- x$data$fO2
+    if(length(unique(fO2)) == 1) {
+      cat(paste("gas:", nitroxname(fO2[1]), "\n"))
+      print(data.frame(time=watchtimes, depth=depths))
+    } else
+    print(data.frame(time=watchtimes,
+                     depth=depths,
+                     gas=nitroxname(fO2),
+                     stringsAsFactors=FALSE), quote=FALSE)
   }
-  invisible(NULL)
+  return(invisible(NULL))
 }
 
 summary.dive <- function(object, ...) {
@@ -138,11 +201,12 @@ summary.dive <- function(object, ...) {
   durations <- diff(times)
   middepths <- (depths[-1] + depths[-n])/2
   meandepth <- sum(durations * middepths)/totaltime
-  gasnames <- unlist(lapply(object$gases, function(g) { summary(g)$name }))
-  flat <- (diff(depths) == 0)
-  stages <- data.frame(depth=depths[flat],
+  fO2 <- object$data$fO2
+  gasnames <- nitroxname(fO2)
+  flat <- (diff(depths) == 0 & durations >= 1)
+  stages <- data.frame(depth=(depths[-n])[flat],
                        time=durations[flat],
-                       gas=gasnames[flat])
+                       gas=(gasnames[-n])[flat])
   z <- list(depths=depths,
             times=times,
             totaltime=totaltime,
@@ -159,15 +223,24 @@ print.summary.dive <- function(x, ...) {
   cat(paste("Dive to", x$maxdepth, "metres"))
   if(x$airdive)
     cat(" on air\n")
-  else 
-    cat(paste("\nGases:", paste(unique(x$gasnames), collapse=", "), "\n"))
+  else {
+    gases <- unique(x$gasnames)
+    ngas <- length(gases)
+    if(ngas <= 5) 
+      cat(paste("\n", ngettext(ngas, "Gas: ", "Gases: "),
+                paste(gases, collapse=", "), "\n", sep=""))
+    else
+      cat("More than 5 gas settings")
+  }
   cat(paste("Total dive time:", round(x$totaltime,1), "minutes\n"))
-  cat("Stages:\n")
-  if(x$airdive)
-    print(x$stages[,1:2])
-  else
-    print(x$stages)
-  cat(paste("\nMean depth", round(x$meandepth,1), "metres\n"))
+  if(nrow(x$stages) > 0) {
+    cat("Stages:\n")
+    if(x$airdive)
+      print(x$stages[,1:2])
+    else
+      print(x$stages)
+  }
+  cat(paste("Mean depth", round(x$meandepth,1), "metres\n"))
   return(invisible(NULL))
 }
   
@@ -189,15 +262,19 @@ air <- nitrox(0.21)
 
 is.air <- function(g) { g$fO2 == 0.21 }
 
+nitroxname <- function(fO2) {
+  ifelse(fO2 == 0.21, "air", ifelse(fO2 == 1, "100% O2", paste("EAN ", 100 * fO2, "%", sep="")))
+}
+
 print.gas <- function(x, ...) {
-  name <- if(is.air(x)) "air" else if(x$fO2 == 1) "100% O2" else paste("EAN", 100 * x$fO2, "%")
+  name <- nitroxname(x$fO2)
   cat(paste(name, "\n"))
   invisible(NULL)
 }
 
 summary.gas <- function(object, ...) {
   fo <- object$fO2
-  na <- if(is.air(object)) "air" else if(fo == 1) "100% O2" else paste("EAN", 100 * fo, "%")
+  na <- nitroxname(fo)
   mo <- mod(object, ppO2max=1.4)
   mo <- round(mo, 1)
   z <- list(name=na, fO2=fo, fN2=1-fo, mod=mo)
@@ -267,7 +344,8 @@ timetaken <- function(start, finish, uprate, downrate) {
 "haldane" <- 
 function(d,
 	 halftimes={ data(Halftimes); Halftimes$DSAT}, 
-	 prevstate=rep(0.79,length(halftimes))) 
+	 prevstate=rep(0.79,length(halftimes)),
+         progressive=FALSE) 
 {
   stopifnot(is.dive(d))
   if(length(prevstate) != length(halftimes))
@@ -279,20 +357,33 @@ function(d,
 
   times <- times.dive(d)
   depths <- depths.dive(d)
-  fN2 <- unlist(lapply(d$gases, function(g) { 1 - g$fO2 }))
+  fN2 <- d$data$fN2
   durations <- diff(times)
   n <- length(times)
+
+  if(progressive) {
+    profile <- as.data.frame(matrix(, nrow=n, ncol=length(halftimes)))
+    profile[1,] <- prevstate
+  }
 
   for(i in 1:(n-1)) {
     d0 <- depths[i]
     d1 <- depths[i+1]
     tim <- durations[i]
-    k1 <- fN2[i] * (d0/10 + 1)
-    k2 <- fN2[i] * ((d1-d0)/10) / tim
-    f <- exp(- ratecoefs * tim)
-    state <- state * f + (k1 - k2/ratecoefs) * (1 - f) + k2 * tim
+    if(tim > 0) {
+      k1 <- fN2[i] * (d0/10 + 1)
+      k2 <- fN2[i] * ((d1-d0)/10) / tim
+      f <- exp(- ratecoefs * tim)
+      state <- state * f + (k1 - k2/ratecoefs) * (1 - f) + k2 * tim
+    }
+    if(progressive)
+      profile[i+1,] <- state
   }
-  return(state)
+
+  if(progressive)
+    return(profile)
+  else 
+    return(state)
 }
 
 ###################################################################
@@ -336,41 +427,56 @@ function(g, ppO2max=1.4) {
 }
 
 "oxtox" <- 
-function(d)
+function(d, progressive=FALSE)
 {
   times <- times.dive(d)
   depths <- depths.dive(d)
   n <- length(depths)
+  fO2 <- d$data$fO2
 
-  fO2 <- unlist(lapply(d$gases, function(g) { g$fO2 }))
-  fO2 <- c(fO2, fO2[n-1])
-  pO2 <- fO2 * (depths/10 + 1)
-  if(any(pO2 > 1.6))
+  # fO2[i] applies to interval (times[i], times[i+1])
+  pO2start <- fO2 * (depths/10 + 1)
+  pO2end   <- c(fO2[-n] * (depths[-1]/10 + 1), NA)
+  pO2high  <- pmax(pO2start, pO2end, na.rm=TRUE)
+  maxpO2 <- max(pO2high)
+  if(maxpO2 > 1.6)
     warning("O2 partial pressure exceeded 1.6")
-  else if(any(pO2 > 1.4))
+  else if(maxpO2 > 1.5)
+    warning("O2 partial pressure exceeded 1.5")
+  else if(maxpO2 > 1.4)
     warning("O2 partial pressure exceeded 1.4")
-  toxic <- (pO2 > 0.5)
-  if(!any(toxic)) return(0)
+
+  # determine which intervals contain toxicity contributions
+  toxicstart <- (pO2start > 0.5)
+  toxicend   <- (pO2end   > 0.5)
+  toxic <- (pO2high > 0.5)
+  if(!any(toxic)) {
+    if(!progressive) return(0) else return(rep(0, n))
+  }
 
   # calculations for each interval
   durations <- diff(times)
   flat <- (diff(depths) == 0)
-  tox <- toxic[-n] | toxic[-1]
   powerit <- function(x) { exp(0.83 * log(x)) }
+  Powerit <- function(x) { exp(1.83 * log(x)) }
 
-  otu.sum <- 0
-  for(i in seq(tox)[tox]) {
+  # vector of toxicity contributions
+  dotu <- rep(0, n)
+  
+  # compute toxicity contributions for each toxic interval
+  for(i in seq(n-1)[toxic[-n]]) {
     dura <- durations[i]
-    p0 <- pO2[i]
-    p1 <- pO2[i+1]
+    p0 <- pO2start[i]
+    p1 <- pO2end[i]
     if(flat[i])
       # integrate the constant (2 *(p02-0.5))^0.83
-      otu <- dura * powerit(2 * (p0 - 0.5))
-    else if(toxic[i] && toxic[i+1]) {
+      dotu[i+1] <- dura * powerit(2 * (p0 - 0.5))
+    else if(toxicstart[i] && toxicend[i]) {
+      # entire interval is in the toxic zone
       # integrate (a + bx)^0.83)
       a <- 2 * p0 - 1
       b <- 2 * (p1-p0)/dura
-      otu <- (1/(1.83 * b)) * (powerit(a + b * dura) - powerit(a))
+      dotu[i+1] <- (1/(1.83 * b)) * (Powerit(a + b * dura) - Powerit(a))
     } else {
       # interval is only partly toxic
       # compute toxic subinterval
@@ -392,11 +498,13 @@ function(d)
       # integrate (a + bx)^0.83)
       a <- 2 * p0 - 1
       b <- 2 * (p1-p0)/dura
-      otu <- (1/(1.83 * b)) * (powerit(a + b * dura) - powerit(a))
+      dotu[i+1] <- (1/(1.83 * b)) * (Powerit(a + b * dura) - Powerit(a))
     }
-    otu.sum <- otu.sum + otu
   }
-  return(otu.sum)
+  if(progressive)
+    return(cumsum(dotu))
+  else
+    return(sum(dotu))
 }
 
 
@@ -409,27 +517,26 @@ chop.dive <- function(d, tim) {
   stopifnot(is.dive(d))
   stopifnot(tim > 0)
   times <- times.dive(d)
-  depths <- depths.dive(d)
-  gases <- d$gases
+  df <- d$data
   if(tim > max(times))
-    stop("The interruption time \"tim\" is later than the end of the dive")
+    stop("The interruption time is later than the end of the dive")
   last <- max(seq(times)[times <= tim])
   if(times[last] == tim) {
+    # truncation time is an existing waypoint
     if(last==1)
       stop("Zero-duration dive")
-    else {
-      times <- times[1:last]
-      depths <- depths[1:last]
-      gases <- gases[1:(last-1)]
-    }
+    else 
+      df <- df[1:last,]
   } else {
-      times <- c(times[1:last], tim)
-      depths <- depths[c(1:last, last)]
-      gases <- gases[c(1:(last-1), last-1)]
+    # truncation time is between waypoints
+    # interpolate to find depth
+    dep <- d$profile(tim)
+    df <- df[1:last,]
+    df <- rbind(df, c(tim, dep, df$fO2[last], df$fN2[last]))
   }
-  pro <- approxfun(times, depths, method="linear", rule=2, ties="ordered")
-  airdive <- all(unlist(lapply(gases, is.air)))
-  result <- list(profile=pro, gases=gases, airdive=airdive)
+  pro <- approxfun(df$time, df$depth, method="linear", rule=2, ties="ordered")
+  airdive <- all(df$fO2 == 0.21)
+  result <- list(profile=pro, data=df, airdive=airdive)
   class(result) <- c("dive", class(result))
   return(result)
 }
@@ -443,6 +550,12 @@ showstates <- function(d, model="DSAT") {
   stopifnot(is.dive(d))
   stopifnot(is.character(model))
 
+  model.table <- c("DSAT", "USN", "Workman", "ZH-L16A")
+  k <- pmatch(model, model.table)
+  if(is.na(k))
+    stop(paste("Unrecognised model", sQuote(model)))
+  model <- model.table[k]
+  
   switch(model,
          DSAT={  
            data(Halftimes)
@@ -473,42 +586,46 @@ showstates <- function(d, model="DSAT") {
   oldpar <- par(mfrow=c(1,2))
   frame()
   plot(d)
+  timepoints <- times.dive(d)
+  maxtime <- max(timepoints)
+  ntissues <- length(HalfT)
+  
+  # precompute time profile of tissue saturation
+  halprofile <- haldane(d, halftimes=HalfT, progressive=TRUE)
 
+  # convert to relative saturation
+  relhalprofile <- sweep(halprofile, 2, Mvals, "/")
+  
   # determine (approx) maximum relative saturation over entire dive
-  # so that barplot scale is fixed
-  
-  maxrelsat <- 1
-  for(ti in times.dive(d))
-    if(ti > 0) {
-      div <- chop.dive(d, ti)
-      hal <- haldane(div, halftimes=HalfT)
-      rel <- hal/Mvals
-      maxrelsat <- max(max(rel), maxrelsat)
-    }
+  maxrelsat <- max(max(relhalprofile), 1)
 
-  # loop ..
-  
+  # precompute oxygen toxicity profile
+  oxtoxprofile <- oxtox(d, progressive=TRUE)
+
+  # event loop ..
+  hal <- rep(NA, ntissues)
+
   while(length(xy <- locator(1)) > 0) {
     tim <- xy$x
-    if(tim <= 0) 
-      cat("time < 0; pick again\n")
-    else {
-      tim <- min(tim, max(times.dive(d)))
-      div <- chop.dive(d, tim)
-      hal <- haldane(div, halftimes=HalfT)
-      rel <- hal/Mvals
-      otu <- oxtox(div)
-      barplot(rel,
-              xlab=paste("Tissues (", model, ")", sep=""),
-              ylab="Relative saturation",
-              main=paste("Time=", round(tim), "min\n",
-                          "Accumulated oxygen toxicity", round(otu, 1)),
-              ylim=range(c(0, maxrelsat)),
-              names.arg=c("Fast", rep("", length(rel)-2), "Slow"))
-      abline(h=1, lty=3, col="red")
-      plot(d)
-      abline(v=tim, lty=2, col="green")
-    }
+    tim <- max(0, tim)
+    tim <- min(tim, maxtime)
+    ind <- min(which(timepoints >= tim))
+    hal <- as.numeric(halprofile[ind,])
+    rel <- as.numeric(relhalprofile[ind, ])
+    otu <- oxtoxprofile[ind]
+    
+    pozzie <- barplot(rel,
+                      xlab=paste("Tissues (", model, ")", sep=""),
+                      ylab="Relative saturation",
+                      main=paste("Time=", round(tim), "min\n",
+                        "Accumulated oxygen toxicity", round(otu, 1)),
+                      ylim=range(c(0, maxrelsat)),
+                      names.arg=NULL)
+    mtext(side=1, at=pozzie[1], line=1, text="Fast")
+    mtext(side=1, at=pozzie[ntissues], line=1, text="Slow")
+    abline(h=1, lty=3, col="red")
+    plot(d)
+    abline(v=tim, lty=2, col="green")
   }
   par(oldpar)
   hal

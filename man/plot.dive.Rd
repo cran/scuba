@@ -5,7 +5,7 @@
   Plot a dive profile.
 }
 \usage{
-  plot.dive(x, \dots, main, verticals=TRUE)
+  plot.dive(x, \dots, main, show.gases=TRUE, verticals=TRUE)
 }
 \arguments{
   \item{x}{
@@ -17,6 +17,10 @@
   }
   \item{main}{
     Overall label for plot. 
+  }
+  \item{show.gases}{
+    Flag indicating whether the plot should be annotated with labels
+    indicating what gas is breathed.
   }
   \item{verticals}{
     Flag indicating whether the plot should
@@ -41,6 +45,10 @@
   # Dive to 18 m for 30 min with safety stop, on Nitrox EANx 36
   d3 <- dive(nitrox(0.36), c(18,30), c(5,3))
   plot.dive(d3)
+  # Real dive profile
+  data(baron)
+  d4 <- dive(nitrox(0.30), baron[, 1:2])
+  plot(d4, main="Baron Gautsch dive")
 }
 \author{Adrian Baddeley
   \email{adrian@maths.uwa.edu.au}
