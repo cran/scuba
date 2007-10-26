@@ -1,7 +1,7 @@
 #
 # 	scuba.R
 #
-#	$Revision: 1.26 $	$Date: 2007/08/29 18:30:04 $
+#	$Revision: 1.27 $	$Date: 2007/10/26 14:08:20 $
 #
 ###################################################################
 #  
@@ -149,6 +149,7 @@ plot.dive <- function(x, ...,
 
   if(show.gases && !x$airdive) {
     fO2 <- x$data$fO2
+    fO2 <- fO2[ -length(fO2)]
     labels <- nitroxname(fO2)
     rates <- abs(diff(depths)/diff(times))
     aspect <- diff(range(depths))/diff(range(times))

@@ -5,7 +5,7 @@
   Plot a dive profile.
 }
 \usage{
-  plot.dive(x, \dots, main, show.gases=TRUE, verticals=TRUE)
+  \method{plot}{dive}(x, \dots, main, show.gases=TRUE, verticals=TRUE)
 }
 \arguments{
   \item{x}{

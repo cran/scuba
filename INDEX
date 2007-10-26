@@ -1,15 +1,16 @@
+BuehlmannL16A           Decompression model ZH-L16A
+Halftimes               Half-times for Standard Haldane Models
+Mvalues                 M-values for Standard Haldane Models
+Workman65               Decompression model of Workman 1965
 air                     Air
 ascent                  Ascent Rate or Time
 baron                   Real Scuba Dive Profile
-BuehlmannL16A           Decompression model ZH-L16A
 descent                 Descent Rate or Time
 dive                    Define a Dive Profile
 ead                     Equivalent Air Depth
 haldane                 Tissue Saturation by Haldane Model
-Halftimes               Half-times for Standard Haldane Models
 maxmix                  Optimal Nitrox Mixture For Given Depth
 mod                     Maximum Operating Depth
-Mvalues                 M-values for Standard Haldane Models
 nitrox                  Nitrox Mixture
 oxtox                   Pulmonary Oxygen Toxicity
 plot.dive               Plot a Dive Profile
@@ -18,4 +19,3 @@ scuba                   The Scuba Package
 scuba.constants         Constants for Use in Scuba Package
 scuba.disclaimer        Disclaimer for Scuba Library
 showstates              Interactive Display of Diver Saturation
-Workman65               Decompression model of Workman 1965

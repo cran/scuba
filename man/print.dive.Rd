@@ -5,7 +5,7 @@
   Print a dive profile.
 }
 \usage{
-  print.dive(x, \dots, seconds=TRUE)
+  \method{print}{dive}(x, \dots, seconds=TRUE)
 }
 \arguments{
   \item{x}{
