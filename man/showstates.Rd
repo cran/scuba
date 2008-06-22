@@ -13,10 +13,8 @@
     The dive. An object of class \code{"dive"}.
   }
   \item{model}{
-    The name of a decompression model:
-    one of \code{"DSAT"}, \code{"USN"},
-    \code{"Workman"} or \code{"ZH-L16A"}
-    (partially matched).
+    The decompression model. Either an object of class \code{"hm"}
+    or a character string identifying a model.
   }
 }
 \value{
@@ -38,14 +36,11 @@
   compartment, that is, the tissue nitrogen tension divided by the
   "surfacing M-value" (tissue maximum nitrogen tension for a
   no-decompression dive at sea level). 
-  
-  If \code{model} is \code{"DSAT"} or \code{"USN"}, the model parameters
-  are extracted from the corresponding entries in the datasets
-  \code{\link{Halftimes}} and \code{\link{Mvalues}}. If \code{model="Workman"}
-  the model parameters are extracted from the
-  dataset \code{\link{Workman65}}. If \code{model="ZH-L16A"}
-  the model parameters are extracted from the
-  dataset \code{\link{BuehlmannL16A}}.
+
+  The argument \code{model} determines the decompression model.
+  It should be either an object of class \code{"hm"} (created by
+  \code{\link{hm}}) or a character string matching one of the
+  options in \code{\link{pickmodel}}.
 }
 \seealso{
   \code{\link{dive}},

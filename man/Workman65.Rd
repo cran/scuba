@@ -30,13 +30,18 @@
   Tikvisis and Gerth (2003), Table 10.1.1, page 440.
 }
 \references{
-  A.O. Brubakk and T.S. Neuman (eds.) (2003)
+  Brubakk, A.O. and Neuman, T.S. (eds.) (2003)
   Bennett and Elliott's Physiology and Medicine of Diving.
   5th Edition. Saunders. ISBN 0-7020-2571-2
 
   Tikvisis, P. and Gerth, W.A. (2003)
   Decompression Theory. 
   In Brubakk and Neuman (2003), Chapter 10.1, pages 419-454.
+
+  Workman, R.D. (1965) Calculation of decompression schedules
+  for nitrogen-oxygen and helium-oxygen dives.
+  Research Report 6-65. US Navy Experimental Diving Unit.
+  Washington DC. 
 }
 \seealso{
   \code{\link{BuehlmannL16A}}

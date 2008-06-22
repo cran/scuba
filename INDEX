@@ -1,21 +1,34 @@
+Bookspan                Tissue data from Bookspan's book
 BuehlmannL16A           Decompression model ZH-L16A
-Halftimes               Half-times for Standard Haldane Models
-Mvalues                 M-values for Standard Haldane Models
 Workman65               Decompression model of Workman 1965
 air                     Air
 ascent                  Ascent Rate or Time
 baron                   Real Scuba Dive Profile
+chop.dive               Extract Part of a Dive Profile
+depths.dive             Depths at each waypoint of a dive
 descent                 Descent Rate or Time
 dive                    Define a Dive Profile
+durations.dive          Durations of time between each waypoint of a
+                        dive
 ead                     Equivalent Air Depth
 haldane                 Tissue Saturation by Haldane Model
+hm                      Haldane Type Model
+is.nitrox               Recognise a Nitrox Gas
 maxmix                  Optimal Nitrox Mixture For Given Depth
 mod                     Maximum Operating Depth
+ndl                     No-Decompression Limit
 nitrox                  Nitrox Mixture
 oxtox                   Pulmonary Oxygen Toxicity
+param                   Extract parameters from Haldane model
+pickmodel               Standard Decompression Models
 plot.dive               Plot a Dive Profile
 print.dive              Print a Dive Profile
+saturated.state         Saturated Tissue State
 scuba                   The Scuba Package
 scuba.constants         Constants for Use in Scuba Package
 scuba.disclaimer        Disclaimer for Scuba Library
 showstates              Interactive Display of Diver Saturation
+tanklist                Extract or Change the Breathing Gas Tanks in a
+                        Dive
+times.dive              Elapsed times at each waypoint of a dive
+trimix                  Trimix Gas

@@ -3,7 +3,7 @@
 \title{Maximum Operating Depth}
 \description{
   Computes the Maximum Operating Depth for a given
-  nitrox mixture.
+  gas mixture.
 }
 \usage{
  mod(g, ppO2max=1.4)
@@ -11,7 +11,7 @@
 \arguments{
   \item{g}{
     Breathing gas. An object of class \code{"gas"} or a number
-    giving the fraction (between 0 and 1) of oxygen in the
+    giving the fraction (between 0 and 1) of oxygen in a
     nitrox mixture. 
   }
   \item{ppO2max}{
@@ -20,15 +20,15 @@
   }
 }
 \value{
-  The maximum operating depth for this nitrox mixture.
+  The maximum operating depth for this gas.
 }
 \details{
   Computes the maximum depth at which the
   partial pressure of oxygen does not exceed \code{ppO2max}.
 }
 \section{Warnings}{
-  Not applicable to altitude dives. Not applicable to
-  gas mixtures other than nitrox (oxygen-nitrogen mixtures).
+  Not applicable to altitude dives. Does not check whether the
+  gas would be hypoxic at the surface.
 }
 \seealso{
   \code{\link{ead}},
@@ -38,8 +38,10 @@
 \examples{
   # Nitrox I (32\% oxygen) 
   mod(0.32)
-  # Nitrox II (36\% oxygen)
-  mod(0.36)
+  # Nitrox II (36\% oxygen) 
+  mod(nitrox(0.36))
+  # Trimix 15/50
+  mod(trimix(0.15, 0.5))
 }
 \author{Adrian Baddeley
   \email{adrian@maths.uwa.edu.au}

@@ -39,6 +39,22 @@
   OTU. Allowing 650 OTU for recompression therapy implies a working
   maximum of 850 OTU per day. 
 }
+\references{
+  Bookspan, J. (1995) Diving physiology in plain English.
+  Undersea and Hyperbaric Medicine Society, Kensington, Maryland (USA).
+  ISBN 0-930406-13-3.
+
+  Brubakk, A.O. and Neuman, T.S. (eds.) (2003)
+  Bennett and Elliott's Physiology and Medicine of Diving.
+  5th Edition. Saunders. ISBN 0-7020-2571-2
+
+  Buehlmann, A.A., Voellm, E.B. and Nussberger, P. (2002)
+  \emph{Tauchmedizin}. 5e Auflage. Springer-Verlag.
+
+  Wienke, B.R. (1994)
+  \emph{Basic diving physics and applications}.
+  Best Publishing Co.
+}
 \section{Warnings}{
   Not applicable to altitude dives. Not applicable to
   gas mixtures other than nitrox (oxygen-nitrogen mixtures).
