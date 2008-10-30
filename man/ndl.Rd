@@ -72,6 +72,10 @@ ndl(depth, g=air, prevstate=NULL, model = "DSAT")
   Numeric vector, of the same length as \code{depth},
   giving the No-Decompression Limit in minutes for each depth.
   Infinite values are possible.
+
+  The value also has an attribute called \code{"controlling"} which
+  identifies the controlling tissue (the tissue for which the M-value
+  is reached).
 }
 \author{Adrian Baddeley
   \email{adrian@maths.uwa.edu.au}

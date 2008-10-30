@@ -1,7 +1,7 @@
 #
 # 	dive.R
 #
-#	$Revision: 1.18 $	$Date: 2008/06/20 21:54:29 $
+#	$Revision: 1.25 $	$Date: 2008/10/31 05:51:55 $
 #
 ###################################################################
 #  
@@ -18,9 +18,15 @@
 #
 dive <- function(..., begin=0, end=0, tanklist=NULL) {
   X <- list(...)
+  if(length(X) == 0)
+    stop("No dive profile supplied")
+  
   stopifnot(is.numeric(begin) && length(begin) == 1)
   stopifnot(is.numeric(end) && length(end) == 1)
+
   tanks.given <- !is.null(tanklist)
+  gases.given <- tanks.given || any(unlist(lapply(X, is.gas)))
+  tanks.implied <- FALSE
 
   # initialise current state and rules
   state <- data.frame(time=0, depth=begin,
@@ -28,8 +34,8 @@ dive <- function(..., begin=0, end=0, tanklist=NULL) {
   rate.down <- descent(30)  # default descent rate
   rate.up <- ascent(18)    # default ascent rate
   if(!tanks.given)
-    tanklist <- list(air)
-
+    tanklist <- list(air)  # default tank
+  
   # set up data frame to record the entire dive profile
   # NB: gas fractions apply to the time interval [i,i+1]
   df <- state
@@ -52,9 +58,10 @@ dive <- function(..., begin=0, end=0, tanklist=NULL) {
 
   gasequal <- function(g1, g2) { identical(all.equal(g1, g2), TRUE) }
 
-  # examine arguments
+  # examine arguments one-by-one
   for(i in seq(X)) {
     Y <- X[[i]]
+    # ....................................................................
     if(is.rate(Y)) # change the ascent or descent rate
       if(Y$up) rate.up <- Y else rate.down <- Y
     else if(is.gas(Y)) {
@@ -76,6 +83,7 @@ dive <- function(..., begin=0, end=0, tanklist=NULL) {
       state <- change(state, fO2=Y$fO2, fN2=Y$fN2, fHe=Y$fHe, tankid=tankid)
       df[now, ] <- state
     } else if(tanks.given && tagged[i] && names(X)[i] == "tank") {
+      # argument tank=name or tank=number
       # switch to new tank Y for next time interval
       if(is.null(tanklist))
         stop("Cannot change tank: no tanks specified")
@@ -83,6 +91,7 @@ dive <- function(..., begin=0, end=0, tanklist=NULL) {
       state <- change(state, fO2=Z$fO2, fN2=Z$fN2, fHe=Z$fHe, tankid=Y)
       df[now, ] <- state
     } else if(is.vector(Y)) {
+      # waypoint
       if(length(Y) > 2)
         stop("Vector of length > 2 is not a recognised format")
       newdepth <- Y[1]
@@ -101,6 +110,7 @@ dive <- function(..., begin=0, end=0, tanklist=NULL) {
         now <- now + 1
       }
     } else if(is.data.frame(Y)) {
+      # dive profile data
       if(ncol(Y) != 2)
         stop("Data frame should have 2 columns")
       newtimes <- Y[,1]
@@ -117,15 +127,25 @@ dive <- function(..., begin=0, end=0, tanklist=NULL) {
         newtimes <- newtimes/60
       } else if(is.character(newtimes)) {
         # assume mm:ss format
-        newtimes <- as.difftime(newtimes, format="%M:%S")
-        units(newtimes) <- "mins"
-        newtimes <- as.numeric(newtimes)
+        zip <- function(x){
+          x <- as.numeric(x)
+          n <- length(x)
+          secs <- sum(x * 60^((n-1):0))
+          return(secs/60)
+        }
+        newtimes <- unlist(lapply(strsplit(newtimes, ":"), zip))
       } else 
         stop("Unknown format for elapsed times")
-      
+
+      if(any(is.na(newtimes)))
+        stop("Unable to convert times")
       if(!all(diff(newtimes) > 0))
         stop("Elapsed times are not an increasing sequence")
 
+      # convert elapsed times
+      newtimes <- newtimes + state$time
+      
+      # make data frame 
       newdf <- data.frame(time=newtimes,
                           depth=newdepths,
                           fO2=state$fO2,
@@ -133,9 +153,21 @@ dive <- function(..., begin=0, end=0, tanklist=NULL) {
                           fHe=state$fHe)
       if(!is.null(tanklist))
         newdf <- cbind(newdf, tankid=state$tankid)
+
+      if(newdepths[1] != state$depth) {
+        # First ascend/descend to starting depth (on current gas)
+        duration <- timetaken(state$depth, newdepths[1], rate.up, rate.down)
+        newdf$time <- newdf$time + duration
+      } else if(newtimes[1] == state$time) {
+          # last row of df duplicates first row of newdf
+          df <- df[-now, ]
+      }         
+
+      # tack on the data frame
       df <- rbind(df, newdf)
-      now <- now + nsteps
+      now <- nrow(df)
       state <- df[now, ]
+      
     } else if(is.dive(Y)) {
       #### dive object
       Ydata <- Y$data
@@ -146,20 +178,68 @@ dive <- function(..., begin=0, end=0, tanklist=NULL) {
         state <- change(state, duration, newdepth)
         df <- rbind(df, state)
         now <- now + 1
-      }
-      # Now reconcile breathing gases.
-      if(now == 1 && !tanks.given) {
-        # we haven't started diving yet, so no tanks have been breathed.
-        # Take tank list from Y and use gas specified by Y
-        tanklist <- Y$tanklist
-        tanks.given <- Y$tanks.given
       } else {
-        # Concatenate tank lists and convert tank ID's to integers
-        tid <- as.integer(df$tankid)
-        Ytid <- as.integer(Ydata$tankid)
-        tanklist <- append(tanklist, Y$tanklist)
-        df$tankid <- tid
-        Ydata$tankid <- Ytid + max(tid)
+          # last row of df duplicates first row of newdf
+          df <- df[-now, ]
+      }         
+      # Now determine breathing gases and alter 'Ydata'
+      if(gases.given) {
+        # The arguments in the call to dive() specify some gases.
+        # Override the gases used in Y.
+        # Assume Y is conducted using current gas
+        Ydata$tankid <- state$tankid
+        Ydata$fO2    <- state$fO2
+        Ydata$fN2    <- state$fN2
+        Ydata$fHe    <- state$fHe
+      } else {
+        # No gases were specified in the call to dive().
+        if(now == 1) {
+          # We haven't started diving yet, so no tanks have been breathed
+          # and the tank list is so far undetermined.
+          # Copy the (explicit or implicit) tank list from Y
+          # Copy tank selection from Y
+          tanklist <- Y$tanklist
+          tanks.implied <- tanks.implied || Y$tanks.given
+        } else if(!Y$tanks.given) {
+          # Y does not have any user-defined tank information;
+          # override gases in Y
+          # Assume Y is conducted using current gas
+          Ydata$tankid <- state$tankid
+          Ydata$fO2    <- state$fO2
+          Ydata$fN2    <- state$fN2
+          Ydata$fHe    <- state$fHe
+        } else {
+          # Y has user-defined tank information;
+          # our dive has already started on some tank;
+          # merge tank lists
+          tanks.implied <- TRUE
+          tid <- df$tankid
+          Ytid <- Ydata$tankid
+          if(is.factor(tid) && is.factor(Ytid)) {
+            # tanks identified by factor/character labels
+            if(!identical(tanklist, Y$tanklist)
+               || !identical(levels(tid), levels(Ytid))) {
+              # Factors are not compatible
+              # Take union of factor levels
+              tidN <- length(levels(tid))
+              YtidN <- length(levels(Ytid))
+              lev <- c(levels(tid), levels(Ytid))
+              tid <- factor(tid, levels=lev)
+              Ytid <- factor(as.integer(Ytid) + tidN, levels=seq(tidN + YtidN))
+              levels(Ytid) <- lev
+              df$tankid <- tid
+              Ydata$tankid <- Ytid
+              tanklist <- append(tanklist, Y$tanklist)
+            }
+          } else {
+            # tanks will be numbered
+            df$tankid <- as.integer(tid)
+            Ydata$tankid <- as.integer(Ydata$tankid) + length(tanklist)
+            tanklist <- append(tanklist, Y$tanklist)
+          }
+          # update gas fractions in 'Ydata'
+          Ydata <- reconcile.df(Ydata, tanklist)
+        }
       }
       # Then tack on the new dive
       Ydata$time <- (Ydata$time - Ydata$time[1]) + state$time
@@ -168,7 +248,10 @@ dive <- function(..., begin=0, end=0, tanklist=NULL) {
       now <- nrow(df) + 1
     } else 
     stop(paste("The format of argument", i, "is not recognised\n"))
+    # ....................................................................
   }
+  # End of loop - all arguments examined.
+  #
   if(state$depth != end) {
     # Don't forget to surface.. (or whatever)
     duration <- timetaken(state$depth, end, rate.up, rate.down)
@@ -176,19 +259,38 @@ dive <- function(..., begin=0, end=0, tanklist=NULL) {
     df <- rbind(df, state)
     now <- now + 1
   }
+  # check dive is all under water!
+  if(any(df$depth < 0)) {
+    warning("Some depths were less than 0; they were reset to 0")
+    df$depth <- pmax(0, df$depth)
+  }
   # was it an air dive?
   airdive <- all(with(df, gasnames(fO2, fN2, fHe)) == "air")
 
+  # convert character tank names to factor levels
+  # so that they can always be coerced to integer
+  if(is.character(df$tankid)) {
+    nama <- names(tanklist)
+    if(is.null(nama))
+      nama <- paste(seq(tanklist))
+    df$tankid <- factor(df$tankid, levels=nama)
+  }
+  
   # dive depth/time profile
+  if(nrow(df) <= 1)
+    stop("Need at least two waypoints for a dive")
   pro <- approxfun(df$time, df$depth, method="linear", rule=2, ties="ordered")
   # 
   result <- list(profile=pro, data=df, airdive=airdive, tanklist=tanklist,
-                 tanks.given=tanks.given)
+                 tanks.given=tanks.given || tanks.implied)
   class(result) <- c("dive", class(result))
   return(result)
 }
 
 is.dive <- function(x) { inherits(x,"dive")}
+
+####################################################################
+# Entries in dive objects
 
 depths.dive <- function(d) {
   stopifnot(is.dive(d))
@@ -242,28 +344,101 @@ durations.dive <- function(d) {
   return(d)
 }
 
+whichtank <- function(d) {
+  stopifnot(is.dive(d))
+  return(d$data$tankid)
+}
+
+"whichtank<-" <- function(d, value) {
+  stopifnot(is.dive(d))
+  DF <- d$data
+  TL <- d$tanklist
+
+  if(length(value) != length(DF$tankid))
+    stop("Replacement value has the wrong length")
+
+  if(is.numeric(value)) {
+    # entries in 'value' are integers
+    if(!all(value %in% seq(TL)))
+      stop("Tank numbers do not match tanklist")
+    DF$tankid <- value
+  } else {
+    if(!any(nzchar(names(TL))))
+      stop(paste("The tanklist does not assign names to the tanks;",
+                 "tanks must be indexed by numbers"))
+    # entries in 'value' are character or factor;
+    # tanklist has names.
+    if(is.character(value)) {
+      if(!all(value %in% names(TL)))
+        stop("Tank names do not match names in tanklist")
+      DF$tankid <- factor(value, levels=names(TL))
+    } else if(is.factor(value)) {
+      if(!all(as.character(levels(value)) %in% names(TL)))
+        stop("Tank names do not match names in tanklist")
+      DF$tankid <- value
+    } else stop("Unrecognised format for replacement value")
+  }
+  # update gas fractions
+  DF <- reconcile.df(DF, TL)
+  d$data <- DF
+  return(d)
+}
+  
+##################################################################
+# methods for print, plot etc
+
 
 plot.dive <- function(x, ...,
                       main=deparse(substitute(x)),
-                      show.gases=TRUE, verticals=TRUE) {
+                      text.gases=TRUE, text.cex=1,
+                      text.verticals=TRUE,
+                      col.gases=1:length(tanklist(x)))
+ {
   times <- times.dive(x)
   depths <- depths.dive(x)
-  if(mean(diff(times)) <= 1) {
-    show.gases <- FALSE
-    plot.type <- "l"
-  } else 
-    plot.type <- "o"
-  myplot <- function(x, y, main, ..., type=plot.type, axes=FALSE,
-                     xlab="Time (minutes)", ylab="Depth (metres)", lwd=2) {
-    plot(x, y, main=main, type=type, axes=axes,
-         xlab=xlab, ylab=ylab, lwd=lwd, ...)
-  }
-  myplot(times, -depths, main=main, ...)
+  if(mean(diff(times)) <= 1 && missing(text.gases))
+    text.gases <- FALSE
+
+  # create plot 
+  add <- resolve.defaults(list(...), list(add=FALSE))$add
+  if(!add)
+    do.call("plot.default",
+            resolve.defaults(list(times, -depths, type="n"),
+                             list(...),
+                             list(main=main, axes=FALSE,
+                                  xlab="Time (minutes)",
+                                  ylab="Depth (metres)", lwd=2)))
+  # plot axes
   axis(1, at=pretty(range(times)))
   yp <- pretty(range(depths))
   axis(2, at=-yp, labels=paste(yp))
+  
+  # determine plot colour for each gas
+  ntank <- length(x$tanklist)
+  conformit <- function(argu, n, default=1) {
+    arguname <- deparse(substitute(argu))
+    if(is.null(argu))
+      argu <- default
+    if(length(argu) == n)
+      return(argu)
+    if(length(argu) == 1)
+      return(rep(argu, n))
+    stop(paste(arguname, "has the wrong length"))
+  }
+  col.gases <- conformit(col.gases, ntank)
+  
+  # plot segments  
+  noway <- nrow(x$data)
+  tankid <- as.integer(x$data$tankid)
+  do.call("segments",
+          resolve.defaults(list(times[-noway], -depths[-noway],
+                                times[-1], -depths[-1]),
+                           list(...),
+                           list(col=col.gases[tankid[-noway]],
+                                lwd=2)))
 
-  if(show.gases && !x$airdive) {
+  # annotate
+  if(text.gases && !x$airdive) {
     labels <- with(x$data, gasnames(fO2, fN2, fHe))[-nrow(x$data)]
     rates <- abs(diff(depths)/diff(times))
     aspect <- diff(range(depths))/diff(range(times))
@@ -271,9 +446,11 @@ plot.dive <- function(x, ...,
     n <- length(times)
     midx <- (times[-n] + times[-1])/2
     midy <- -x$profile(midx)
-    text(midx[!vertical],  midy[!vertical], labels[!vertical], pos=3)
-    if(verticals)
-      text(midx[vertical], midy[vertical], labels[vertical], srt=90)
+    text(midx[!vertical],  midy[!vertical], labels[!vertical],
+         pos=3, cex=text.cex)
+    if(text.verticals)
+      text(midx[vertical], midy[vertical], labels[vertical],
+           srt=90, cex=text.cex)
   }
   invisible(NULL)
 }
@@ -507,14 +684,53 @@ tanklist <- function(d) {
 "tanklist<-" <- function(d, value) {
   if(!is.dive(d))
     stop("In tanklist(d) <- value, d must be a dive object")
-  if(!is.list(value) || !all(unlist(lapply(value, is.gas))))
-    stop("In tanklist(d) <- value, value must be a list of gases")
-  tk <- d$tanklist
-  if(is.null(tk))
-    stop("Dive does not contain any tank information")
-  if(length(tk) != length(value))
-    stop("Lengths of new and old tanklists do not match")
 
+  if(is.null(value)) {
+    # wipe all tank data
+    d$tanks.given <- FALSE
+    d$tanklist <- list(air)
+    d$airdive <- TRUE
+    d$data$tankid <- 1
+    d$data$fO2 <- air$fO2
+    d$data$fN2 <- air$fN2
+    d$data$fHe <- air$fHe
+    return(d)
+  }
+  if(!is.list(value) ||
+     length(value) == 0 ||
+     !all(unlist(lapply(value, is.gas))))
+    stop("In tanklist(d) <- value, value must be a list of gases")
+
+  tk <- d$tanklist
+  if(is.null(tk)) {
+    # Dive does not currently contain any tank information
+    # Assign tanklist
+    d$tanklist <- value 
+    # Assume tank 1 used throughout dive
+    tanknames <- names(value)
+    if(all(nzchar(tanknames)))
+      d$data$tankid <- factor(tanknames[1], levels=tanknames)
+    else 
+      d$data$tankid <- 1
+    # Fill out gas fractions
+    g <- tanklist[[1]]
+    d$data$fO2 <- g$fO2
+    d$data$fN2 <- g$fN2
+    d$data$fHe <- g$fHe
+    # Was it an air dive?
+    d$airdive <- is.air(g)
+    return(d)
+  }
+  
+  if(length(tk) != length(value)) {
+    # check whether existing tankid values would be valid
+    mold <- max(as.integer(d$data$tankid))
+    mnew <- length(value)
+    if(mold > mnew)
+      stop(paste("New tanklist contains only", mnew, "tanks;",
+                 "dive schedule requires", mold, "tanks"))
+  }
+  
   # reconcile names of tanks
   hasoldnames <- any(nzchar(names(tk)))
   hasnewnames <- any(nzchar(names(value)))
@@ -524,13 +740,8 @@ tanklist <- function(d) {
   d$tanks.given <- TRUE
   d$tanklist <- value
   df <- d$data
-  for(i in 1:nrow(df)) {
-    id <- df$tankid[i]
-    g <- value[[id]]
-    df$fO2[i] <- g$fO2
-    df$fN2[i] <- g$fN2
-    df$fHe[i] <- g$fHe
-  }
+  # update gas fractions
+  df <- reconcile.df(df, value)
 
   if(hasnewnames) 
     df$tankid <- factor(names(value)[as.integer(df$tankid)],
@@ -550,4 +761,39 @@ allspecies <- function(d, inert=TRUE) {
   if(inert)
     out <- out[out != "O2"]
   return(out)
+}
+
+reconcile.df <- function(df, tanks) {
+  # Ensure gas fractions are correctly determined by tank id
+  for(i in 1:nrow(df)) {
+    id <- df$tankid[i]
+    g <- tanks[[id]]
+    df$fO2[i] <- g$fO2
+    df$fN2[i] <- g$fN2
+    df$fHe[i] <- g$fHe
+  }
+  return(df)
+}
+
+# Resolve conflicts between several sets of defaults
+# Usage:
+#     resolve.defaults(list1, list2, list3, .......)
+# where the earlier lists have priority 
+#
+resolve.defaults <- function(...) {
+  arglist <- list(...)
+  argue <- list()
+  if((n <- length(arglist)) > 0)  {
+    for(i in seq(n))
+      argue <- append(argue, arglist[[i]])
+  }
+  if(!is.null(nam <- names(argue))) {
+    named <- (nam != "")
+    arg.unnamed <- argue[!named]
+    arg.named <-   argue[named]
+    if(any(discard <- duplicated(names(arg.named)))) 
+      arg.named <- arg.named[!discard]
+    argue <- append(arg.unnamed, arg.named)
+  }
+  return(argue)
 }

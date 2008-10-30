@@ -1,8 +1,8 @@
 \name{scuba}
+\alias{scuba-package}
 \alias{scuba}
-\title{
-The Scuba Package
-}
+\docType{package}
+\title{The Scuba Package}
 \description{
   This is a summary of the features of 
   \code{scuba}, a package in \code{R}
@@ -77,20 +77,29 @@ The Scuba Package
 
   Dive profiles can also be modified after they are created: see below.
 }
-\section{Uploaded Dive Profiles}{
+\section{Real Dive Profiles}{
   Dive profiles may also be uploaded from your dive computer
   and studied in the \pkg{scuba} package. First convert the
   uploaded profile data to a \code{data.frame} with two columns,
   the first column containing the elapsed time and the second column
   containing the depth (in metres) recorded at each time. The elapsed
-  times can be either a character vector in minutes-and-seconds format
-  \code{mm:ss}, or a vector of integer times measured in \emph{seconds}
+  times can be either a vector of character strings
+  in minutes-and-seconds format
+  \code{mm:ss} or hours-minutes seconds \code{hh:mm:ss},
+  or a vector of integer times measured in \emph{seconds}
   of elapsed time, or an object of class \code{\link{difftime}}
   containing the elapsed times in any time unit. Then pass this data
   frame as an argument to the function \code{\link{dive}}.
 
-  An example of a real dive profile is provided in the
-  \code{\link{baron}} dataset.
+  An example of such a data frame, uploaded from a dive computer,
+  is provided in the \code{\link{baron}} dataset supplied with the
+  package. See the help file for
+  \code{\link{baron}} for an example of how to convert a data frame
+  to a \code{"dive"} object.
+
+  The package also provides 11 real dive profiles that have already been
+  converted to \code{"dive"} objects.
+  See the help file for \code{\link{pedro}}.
 }
 \section{Decompression Calculations}{
   The \pkg{scuba} package performs the mathematical calculations of
@@ -258,12 +267,54 @@ The Scuba Package
 
   To paste together two dive profiles or fragments of dive profiles,
   simply give them as arguments to \code{\link{dive}}.
+}
+\section{Changing the breathing gases}{
+  A dive object has a \emph{tank list} which is a list of the
+  tanks of breathing gas that were used (or were available to be used)
+  during the dive. The function \code{\link{tanklist}} returns
+  this list, and the function \code{\link{tanklist}<-} changes the list.
 
-  To modify the breathing gas used in a dive, use
-  \code{\link{tanklist<-}}. For example,
+  For example,
   \code{d <- dive(c(30,20), c(5,5))} is a dive conducted using air.
-  To modify it to a dive that used nitrox EANx 32, type
-  \code{tanklist(d)[[1]] <- nitrox(0.32)}.   
+  To modify it to a dive that used nitrox EANx 32, simply type
+  \code{tanklist(d) <- list(nitrox(0.32))}.
+  Again \code{d <- dive(air, c(30,40), 6, nitrox(0.5), c(6,3), c(3,3))} is a
+  dive conducted using air (tank 1) for the deep section and EANx 50
+  (tank 2) for the decompression stops at 6 metres and 3 metres.
+  To change the contents of tank 1 to EANx 32, type
+  \code{tanklist(d) <- list(nitrox(0.32), nitrox(0.5))} or
+  just \code{tanklist(d)[[1]] <- nitrox(0.32)}. 
+  To associate a name which
+  each tank, give names to the entries in the tank list, for example
+  \code{tanklist(d) <- list(deep=nitrox(0.32), deco=nitrox(0.5))}
+  or just assign \code{names(tanklist(d)) <- c("deep", "deco")}.
+
+  The \emph{selection} of tanks,
+  i.e. which tank is actually used at each stage of the
+  dive, is specified by the function \code{\link{whichtank}}.
+  The command \code{whichtank(d)}
+  returns a vector of integers or character strings,
+  identifying which tank in the tank list is in use at each
+  waypoint during the dive. That is, \code{whichtank(d)[i]} is the tank
+  in use at the \code{i}th waypoint during the dive.
+  The vector \code{whichtank(d)} has the same length as the vectors
+  \code{depths.dive(d)} and \code{times.dive(d)}.
+
+  To change the selection of tanks at each stage during the dive,
+  use the function \code{\link{whichtank}<-}. For example,
+  \code{d <- dive(air, c(30,40), 6, nitrox(0.5), c(6,3), c(3,3))} is a
+  dive conducted using air (tank 1) for the deep section and EANx 50
+  (tank 2) for the
+  decompression stops at 6 metres and 3 metres. To change this
+  so that the deco gas is only used at the 3-metre stop, type
+  \code{whichtank(d) <- ifelse(depths.dive(d) < 3, 1, 2)}.
+  Alternatively \code{whichtank(d)[depths.dive(d) > 3] <- 1}
+  would select tank 1 for all parts of the dive deeper than 3 metres.
+  These manipulations are usually easier to understand if the tanks
+  have names. For example typing
+  \code{names(tanklist(d)) <- c("deep", "deco")} we could then
+  type \code{whichtank(d) <- ifelse(depths.dive(d) < 3, "deep", "deco")}
+  or \code{whichtank(d)[depths.dive(d) > 3] <- "deep"}.
 }
 \section{Licence}{
   This library and its documentation are usable under the terms of the "GNU 
@@ -274,7 +325,7 @@ The Scuba Package
   Undersea and Hyperbaric Medicine Society, Kensington, Maryland (USA).
   ISBN 0-930406-13-3.
   
-  Boycott, A.E. Damant, G.C.C. and Haldane, J.B. (1908)
+  Boycott, A.E. Damant, G.C.C. and Haldane, J.S. (1908)
   The prevention of compressed air illness.
   \emph{Journal of Hygiene} (London) \bold{8}, 342--443.
 
@@ -307,6 +358,7 @@ The Scuba Package
   \email{adrian@maths.uwa.edu.au}
   \url{http://www.maths.uwa.edu.au/~adrian/}
   with contributions from Vittorio Broglio
+  and Pedro Antonio Neves.
 }
 \keyword{utilities}
 

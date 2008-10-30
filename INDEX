@@ -20,6 +20,7 @@ ndl                     No-Decompression Limit
 nitrox                  Nitrox Mixture
 oxtox                   Pulmonary Oxygen Toxicity
 param                   Extract parameters from Haldane model
+pedro                   Real Scuba Dive Profiles
 pickmodel               Standard Decompression Models
 plot.dive               Plot a Dive Profile
 print.dive              Print a Dive Profile
@@ -32,3 +33,4 @@ tanklist                Extract or Change the Breathing Gas Tanks in a
                         Dive
 times.dive              Elapsed times at each waypoint of a dive
 trimix                  Trimix Gas
+whichtank               Which Tanks are Used during a Dive

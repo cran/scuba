@@ -5,7 +5,10 @@
   Plot a dive profile.
 }
 \usage{
-  \method{plot}{dive}(x, \dots, main, show.gases=TRUE, verticals=TRUE)
+  \method{plot}{dive}(x, \dots, main=deparse(substitute(x)),
+                        text.gases=TRUE, text.cex=1,
+                        text.verticals=TRUE,
+                        col.gases=1:length(tanklist(x)))
 }
 \arguments{
   \item{x}{
@@ -18,14 +21,22 @@
   \item{main}{
     Overall label for plot. 
   }
-  \item{show.gases}{
-    Flag indicating whether the plot should be annotated with labels
+  \item{text.gases}{
+    Logical flag indicating whether the plot should be annotated with labels
     indicating what gas is breathed.
   }
-  \item{verticals}{
-    Flag indicating whether the plot should
+  \item{text.cex}{
+    Numeric value controlling the size of text when \code{text.gases=TRUE}.
+  }
+  \item{text.verticals}{
+    Logical flag indicating whether the plot should
     indicate what gas is breathed during ascent and descent
     between stages, as well as during the main stages of the dive.
+  }
+  \item{col.gases}{
+    Colours to be used to represent each of the breathing gases
+    used in the dive. Either a numeric vector of colour codes,
+    or a vector of character strings identifying colours.
   }
 }
 \value{

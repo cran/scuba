@@ -22,9 +22,9 @@ tanklist(d) <- value
   stage of the dive. These objects are created by the function
   \code{\link{dive}}.
 
-  The tank list of a dive object is a list of the breathing gases
-  that were used during the dive. The function \code{tanklist} returns
-  this list.
+  The tank list of a dive object is a list of the tanks of breathing gas
+  that were used (or available to be used) during the dive.
+  The function \code{tanklist} returns this list.
 
   If a new value is assigned to the tank list of a dive \code{d},
   then \code{d} is changed. The new dive \code{d} is conducted

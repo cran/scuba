@@ -1,7 +1,7 @@
 #
 # 	haldane.R
 #
-#	$Revision: 1.22 $	$Date: 2008/06/23 05:49:16 $
+#	$Revision: 1.28 $	$Date: 2008/10/30 04:55:22 $
 #
 ####################################################################
 #
@@ -59,7 +59,8 @@ conform <- function(state, model="D") {
 function(d,
 	 model=pickmodel("DSAT"),
 	 prevstate=NULL,
-         progressive=FALSE) 
+         progressive=FALSE,
+         relative=FALSE) 
 {
   stopifnot(is.dive(d))
 
@@ -126,10 +127,26 @@ function(d,
   rownames(state) <- rownames(model)
   colnames(state) <- species
 
-  if(progressive)
-    return(profile)
-  else 
-    return(state)
+  if(!relative) {
+    # absolute saturations
+    if(progressive)
+      return(profile)
+    else 
+      return(state)
+  }
+
+  # relative saturations
+  if(progressive) {
+    Mvals <- M0mix(model, d$data$fN2, d$data$fHe)
+    igprofile <- apply(profile, c(1,2), sum) 
+    relprofile <- igprofile/Mvals
+    return(relprofile)
+  } else {
+    Mvals <- M0mix(model, d$data$fN2[n], d$data$fHe[n])
+    igstate <- apply(state, 1, sum)
+    relstate <- igstate/as.vector(Mvals)
+    return(relstate)
+  }
 }
 
 
@@ -139,6 +156,7 @@ function(d,
 #
 
 showstates <- function(d, model="DSAT") {
+  dname <- deparse(substitute(d))
   stopifnot(is.dive(d))
 
   # pick model by its name
@@ -156,13 +174,14 @@ showstates <- function(d, model="DSAT") {
   
   oldpar <- par(mfrow=c(1,2), ask=FALSE)
   frame()
-  plot(d)
+  plot(d, main=dname)
   timepoints <- times.dive(d)
   maxtime <- max(timepoints)
   ntissues <- y$nc
   
   # precompute time profile of tissue saturation
   cat("precomputing tissue saturations...")
+  flush.console()
   halprofile <- haldane(d, model, progressive=TRUE)
 
   # sum over gas species N2 + He = 'inert gas'
@@ -178,6 +197,7 @@ showstates <- function(d, model="DSAT") {
   oxtoxprofile <- oxtox(d, progressive=TRUE)
 
   cat("done.\nplease click on the graph\n")
+  flush.console()
 
   # event loop ..
   hal <- rep(NA, ntissues)
@@ -217,7 +237,7 @@ showstates <- function(d, model="DSAT") {
       mtext(side=1, at=pozzie[ntissues], line=1, text="Slow")
     }
     abline(h=1, lty=3, col="red")
-    plot(d)
+    plot(d, main=dname)
     abline(v=tim, lty=2, col="green")
   }
   par(oldpar)
@@ -243,7 +263,7 @@ ndl <- function(depth, g=air, prevstate=NULL, model="DSAT") {
     prevstate <- saturated.state(model)
   else
     prevstate <- conform(prevstate, model)
-  result <- numeric(n <- length(depth))
+  result <- witch <- numeric(n <- length(depth))
   if(n == 0) return(result)
   species <- summary(model)$species
   pressure <- depth/10 + 1
@@ -255,16 +275,21 @@ ndl <- function(depth, g=air, prevstate=NULL, model="DSAT") {
     init <- prevstate$N2
     for(i in 1:n) {
       ppN2 <- fN2 * pressure[i]
-      result[i] <- 
-        if(any(init > M0))
+      if(any(init > M0)) {
           # initial state of diver does not permit a dive
-          0
-        else if(!any(bite <- (ppN2 > M0)))
+        result[i] <- 0
+        witch[i] <- NA
+      } else if(!any(bite <- (ppN2 > M0))) {
         # tissue tension will never exceed M-value in any compartment
-          Inf
-        else
-          min(-log(((ppN2-M0)[bite])/((ppN2-init)[bite]))/ratecoefs[bite])
+        result[i] <- Inf
+        witch[i] <- NA
+      } else {
+        stuff <- -log(((ppN2-M0)[bite])/((ppN2-init)[bite]))/ratecoefs[bite]
+        result[i] <- min(stuff)
+        witch[i] <- (seq(along=bite)[bite])[which.min(stuff)]
+      }
     }
+    attr(result, "controlling") <- witch
     return(result)
   } else {
     # N2 and He 
@@ -287,6 +312,7 @@ ndl <- function(depth, g=air, prevstate=NULL, model="DSAT") {
     objective <- function(x, ppN2, initN2, rateN2, ppHe, initHe, rateHe, M0) {
       decay(x, initN2, rateN2, ppN2) + decay(x, initHe, rateHe, ppHe) - M0
     }
+    epsilon <- .Machine$double.eps
     for(i in 1:n) {
       ppN2 <- fN2 * pressure[i]
       ppHe <- fHe * pressure[i]
@@ -301,20 +327,33 @@ ndl <- function(depth, g=air, prevstate=NULL, model="DSAT") {
           val[j] <-   Inf
         else {
           endpoint <- -log((ppIG-M0[j])/(ppIG-initIG[j]))/rateSLOWER[j]
-          val[j] <- uniroot(objective,
-                            c(0, endpoint),
-                            initN2=initN2[j],
+          endvalue <- objective(endpoint, initN2=initN2[j],
                             rateN2=rateN2[j],
                             ppN2=ppN2,
                             initHe=initHe[j],
                             rateHe=rateHe[j],
                             ppHe=ppHe,
-                            M0=M0[j])$root
+                            M0=M0[j])
+          if(abs(endvalue) <= 2 * epsilon)
+            val[j] <- endpoint
+          else 
+            val[j] <- uniroot(objective,
+                              c(0, endpoint),
+                              initN2=initN2[j],
+                              rateN2=rateN2[j],
+                              ppN2=ppN2,
+                              initHe=initHe[j],
+                              rateHe=rateHe[j],
+                              ppHe=ppHe,
+                              M0=M0[j])$root
         }
       }
       result[i] <- min(val)
+      witch[i] <- which.min(val)
     }
+    attr(result, "controlling") <- witch
     return(result)
   }
 }
+
 

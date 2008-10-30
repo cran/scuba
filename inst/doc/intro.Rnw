@@ -1,0 +1,1036 @@
+\documentclass[twoside,11pt]{article}
+
+% \VignetteIndexEntry{Introduction to the scuba package}
+\usepackage{graphicx}
+\usepackage[colorlinks=true,urlcolor=blue]{hyperref}
+\usepackage{color}
+
+\newcommand{\pkg}[1]{\texttt{#1}}
+\newcommand{\bold}[1]{{\bf {#1}}}
+\newcommand{\R}{{\sf R}}
+
+\begin{document}
+%\bibliographystyle{plain}
+\thispagestyle{empty}
+
+\title{Introduction to the \texttt{scuba} package}
+\author{Adrian Baddeley}
+\date{October 2008}
+\maketitle
+
+
+<<echo=FALSE,results=hide>>=
+library(scuba)
+@ 
+
+This is an introduction to the features of 
+\pkg{scuba}, a package in \R\ 
+that performs theoretical calculations
+about scuba diving. The package supports
+\begin{itemize}
+\item creation, manipulation and plotting of dive profiles
+\item decompression models 
+\item gas toxicity calculations.
+\end{itemize}
+
+Section~\ref{S:tour} gives a quick tour of the package's functionality.
+Section~\ref{S:start} explains how to install and run the package.
+Section~\ref{S:disclaim} is a legal disclaimer.
+Then the remaining sections \ref{S:diveprof}--\ref{S:tech}
+explain the package commands in greater detail.
+
+\section{Quick tour}
+\label{S:tour}
+
+A \emph{dive profile} gives the diver's depth as a function of elapsed
+time during a scuba dive. See Figure~\ref{F:dives}. 
+
+\SweaveOpts{width=10,height=4}
+\setkeys{Gin}{width=\textwidth}
+
+\begin{figure}[!hbt]
+  \centering
+<<fig=TRUE,echo=FALSE,results=hide>>=
+opa <- par(mfrow=c(1,2))
+d1 <- dive(c(20,20), c(5,5))
+data(pedro)
+plot(d1, main="", lwd=4)
+plot(pedro950, main="", col.gases=1)
+par(opa)
+@   
+  \caption{Examples of dive profiles. 
+   \emph{Left:} square dive plan with safety stop.
+   \emph{Right:} real dive profile, uploaded from a dive computer.
+  }
+  \label{F:dives}
+\end{figure}
+
+\pagebreak
+
+Using the \texttt{dive} function in the \pkg{scuba} package, 
+the user can create a dataset 
+that represents any dive profile. A simple dive profile,
+such as a recreational dive plan or a therapeutic table, can be created by 
+typing the depths and durations of each stage. For example
+a `square' dive to 18 metres for 45 minutes (without a safety stop) is 
+specified by:
+
+<<>>=
+d <- dive(c(18,45))
+@ 
+
+Real dive profile data, uploaded from a dive computer,
+can also be converted into a dive profile dataset.
+
+A dive profile dataset \texttt{d} can be plotted simply by typing 
+\texttt{plot(d)}. Dive profiles can be manipulated easily,
+for example they can be cut-and-pasted together.
+
+The \pkg{scuba} package performs the mathematical calculations of
+classical decompression theory. For any dive profile \texttt{d}, the 
+package can compute the quantity of nitrogen dissolved in the diver's body
+at the end of the dive, or at each time during the dive, using the 
+command \texttt{haldane(d)}. For example, for a dive to 18 metres
+for 45 minutes,
+
+<<>>=
+d <- dive(c(18,45))
+haldane(d)
+@ 
+
+The output gives the nitrogen tension (in atmospheres) 
+in each of the 8 tissue compartments of the PADI DSAT model,
+at the end of the dive. 
+
+The command \texttt{showstates(d)} displays an interactive graphical 
+window. When the user clicks on a point in the dive profile, the
+nitrogen tissue saturation at that time is displayed as a bar chart.
+Here is a screenshot:
+
+\SweaveOpts{width=10,height=5}
+\setkeys{Gin}{width=\textwidth}
+
+<<echo=FALSE,results=hide>>=
+data(pedro)
+frag <- chop.dive(pedro902, 0, 35)
+hald <- haldane(frag, relative=TRUE, model="Z")
+otu  <- oxtox(frag)
+@ 
+
+<<fig=TRUE,echo=FALSE,results=hide>>=
+opa <- par(mfrow=c(1,2))
+pozzie <- barplot(hald,
+                  xlab=paste("Tissues (ZH-L16A)", sep=""),
+                  ylab="Relative saturation",
+                  main=paste("Time= 35 min\n",
+                    "Accumulated oxygen toxicity", round(otu, 1)),
+                      ylim=range(c(0, 1.1, 1.1 * max(hald))),
+                      names.arg=NULL)
+mtext(side=1, at=pozzie[1], line=1, text="Fast")
+mtext(side=1, at=pozzie[17], line=1, text="Slow")
+abline(h=1, lty=3, col="red")
+plot(pedro902)
+abline(v=35, lty=2, col="green")
+par(opa)
+@ 
+
+It is also possible to plot the tissue saturations 
+at each time during the dive, as a surface in three dimensions:
+
+\SweaveOpts{width=6,height=6}
+\setkeys{Gin}{width=0.8\textwidth}
+
+<<echo=FALSE,results=hide>>=
+hald902 <- haldane(pedro902, progressive=TRUE, relative=TRUE)
+@ 
+<<fig=TRUE,echo=FALSE,results=hide>>=
+persp(times.dive(pedro902), 1:8, hald902,
+      theta=-45, shade=0.5, col="yellow", border=NA,
+      xlab="Time", ylab="Tissue", zlab="Relative saturation")
+@ 
+
+The theoretical No Decompression Limit
+(maximum duration of a no-decompression dive to a specified depth) 
+can be computed by the command \texttt{ndl}. For a dive to 24 metres:
+
+<<>>=
+ndl(24)
+@ 
+
+This says that the NDL is 31.5 minutes, and the controlling tissue (the tissue
+that determines the NDL) is tissue 3.
+
+In the \pkg{scuba} package, a {\bf breathing gas} such as air, nitrox or trimix
+is represented by a special dataset. These gas objects are easy to specify:
+for example the command \texttt{nitrox(0.32)} 
+specifies Nitrox 32 (containing 32\% oxygen and 68\% nitrogen).
+
+<<>>=
+nitrox(0.32)
+nitrox(1)
+@ 
+
+Standard nitrox calculations are available, for example
+to compute the equivalent air depth, maximum operating depth,
+and richest nitrox mix for a given depth. To find the maximum
+operating depth for EAN 32:
+
+<<>>=
+mod(nitrox(0.32))
+@ 
+
+A dive profile contains information
+about the breathing gas or gases used in the dive.
+For example, we can specify that a dive was conducted on 
+Nitrox EAN 32:
+
+<<>>=
+nd <- dive(nitrox(0.32), c(18, 45))
+@ 
+
+The dive can be conducted using 
+multiple tanks (cylinders) containing different
+breathing gases, and the diver can switch between these tanks at any time.
+
+\SweaveOpts{width=10,height=6}
+\setkeys{Gin}{width=\textwidth}
+
+<<fig=TRUE>>=
+d <- dive(trimix(0.18, 0.45), c(40, 20), c(30,10), 9, nitrox(0.6), 
+        c(9,3), c(6, 5), c(3, 11))
+plot(d)
+@ 
+
+The decompression calculations work with nitrox and trimix gases.
+The total oxygen toxicity incurred during a nitrox or trimix dive
+can be computed by \texttt{oxtox}.
+
+The breathing gas or gases in a dive profile can be changed easily,
+so it is easy to evaluate how a different choice of breathing gas
+would have affected nitrogen saturation, helium saturation and oxygen toxicity.
+
+\newpage
+\section{Getting started}
+\label{S:start}
+
+To use the \pkg{scuba} package, you will first need to 
+install the \R\ system on your computer, and then 
+install the \pkg{scuba} package within \R (follow
+the installation instructions at \texttt{r-project.org}). 
+
+With all the software installed, 
+start an \R\ session and type \texttt{library(scuba)}. 
+You should get a message like this:
+
+<<echo=FALSE,results=hide>>=
+detach("package:scuba")
+@ 
+
+<<>>=
+library(scuba)
+@ 
+
+The message asks you to read the disclaimer, so here it is:
+
+\section{Disclaimer}
+\label{S:disclaim}
+
+The \pkg{scuba} software library is intended
+for use in research and education about the mathematical
+and statistical basis of decompression theory. It is
+not designed for actual use in scuba diving and related activities.
+It is emphatically not suitable for use in actual diving.
+
+Scuba diving is a dangerous activity with inherent risks of
+death and serious injury. No-one should attempt scuba diving
+without professional training, certification, supervision and
+regular medical assessment.
+
+It is also dangerous for trained scuba divers to exceed the
+limitations of their training. Diving at altitudes above sea level,
+and breathing mixed gases other than air, carry increased risk and
+additional types of risk. Divers should seek additional, professional
+training and certification for such activities. 
+
+This software is not suitable for use in actual scuba diving.
+The software will yield numerical results for any diving activity,
+without giving any warning if the activity would be dangerous or fatal.
+Each function in the \pkg{scuba} library calculates
+the predictions of one theoretical model (a law of physics,
+a decompression model or another empirical relationship).
+In doing so, it does not take account of safety restrictions,
+other physical laws, or other important information.
+
+The software is provided for academic interest only.
+It should not be used to generate diving tables or protocols
+related to diving. No output from this software should be misconstrued as
+a diving table. Only persons qualified to supervise diving
+activities or qualified in hyperbaric medicine should attempt to
+design diving tables. Although existing published diving tables are
+based on theoretical models, such tables have been extensively
+field-tested and modified before approval. Existing tables are more
+conservative than the models from which they were originally derived.
+
+The author does not warrant that the software is correct
+in any sense whatsoever. Even if correctly computed,
+the predictions of a theoretical physical model may not be correct
+predictions. 
+
+\newpage
+\section{Dive profiles}
+\label{S:diveprof}
+
+In the rest of this document, we will go through the features of
+the \pkg{scuba} package in more detail.
+
+A \emph{dive profile} gives the diver's depth as a function of elapsed
+time during a scuba dive. See Figure~\ref{F:dives}. This section explains
+how to create and manipulate dive profiles in the \pkg{scuba}
+package.
+
+\subsection{The \texttt{dive} command}
+
+The command \texttt{dive} creates an object representing a dive profile.
+For example, the following command creates a dive to 18 metres for 45 minutes
+with a 3-minute safety stop at 5 metres:
+
+\SweaveOpts{width=6,height=4}
+\setkeys{Gin}{width=0.8\textwidth}
+
+<<>>=
+d <- dive(c(18, 45), c(5,3))
+@ 
+
+The resulting dataset \texttt{d} is an object of class \texttt{"dive"}.
+It can be plotted as a conventional dive profile graph by executing
+the command \texttt{plot(d)}. 
+
+<<fig=TRUE>>=
+plot(d)
+@ 
+
+A dive object can be printed as a table of waypoint depths and times
+by simply typing its name:
+
+<<>>=
+d
+@ 
+
+A summary of the dive (with such information as the average depth,
+maximum depth and the main stages of the dive) can be printed
+by typing \texttt{summary(d)}.
+
+<<>>=
+summary(d)
+@ 
+
+\subsection{Creating a synthetic dive profile}
+
+A dive profile is piecewise linear: it is a series of \emph{stages}
+that join successive \emph{waypoints}. Each waypoint is specified
+by the depth and elapsed time when it is reached. The stage between
+two waypoints is either a sojourn at a fixed depth, or an ascent or
+descent at a constant rate.
+
+To create a dive plan or a synthetic dive profile,
+use the function \texttt{dive}, typing in the depths of each waypoint
+and the duration of time between each successive waypoint.
+
+The function \texttt{dive} interprets its arguments
+as a sequence of actions or events occurring during the dive.
+If an argument is a vector of length 2, it is interpreted
+as \texttt{c(depth,time)} specifying the depth and duration
+of a stage of the dive. If the argument is a single number,
+it is interpreted as a depth, meaning that the diver ascends or
+descends to this depth. For example, 
+
+<<>>=
+d2 <- dive(c(18, 45), c(5,3))
+@ 
+
+specifies a dive to 18 metres for 45 minutes followed by a safety stop
+at 5 metres for 3 minutes:
+
+<<fig=TRUE>>=
+plot(d2)
+d2
+@ 
+
+Multilevel dives with any number of stages
+can be specified in the same way. A dive object may also include
+periods spent at the surface (depth zero) and may therefore represent
+a succession of dives separated by surface intervals. For example,
+
+<<>>=
+d3 <- dive(c(30,15),c(9,1),c(5,5),c(0,60),c(12,60),c(5,5))
+@ 
+
+represents two dives (with safety stops)
+separated by a one-hour surface interval:
+
+<<fig=TRUE>>=
+plot(d3)
+@ 
+ 
+By default, the function \texttt{dive} fills in some details
+about the dive. It assumes that the diver breathes compressed air;
+the dive starts and ends at the surface
+(depth zero); the diver descends 
+at the default descent rate of 30 metres per minute; and the diver
+ascends at the default ascent rate of 18 metres per minute.
+These defaults can be changed by giving extra arguments to the
+function \texttt{dive}.
+
+Dive profiles can also be modified after they are created: see below.
+
+\subsection{Real Dive Profiles}
+
+Dive profiles may also be uploaded from your dive computer
+and studied in the \pkg{scuba} package. There are three steps:
+\begin{enumerate}
+\item read the data from a file into \R
+\item convert the dataset into the right format in \R
+\item pass the dataset as an argument to the function \texttt{dive}.
+\end{enumerate}
+
+\subsubsection*{Read the data from a file into \R}
+
+To read data from a file into an \R\ session, we use the 
+basic capabilities of \R. If you are not familiar with \R, 
+please consult one of the many basic user guides to \R. 
+
+Typically you will use one of the functions
+\texttt{read.table} or \texttt{read.csv} to read data from a text file.
+If your data are stored in a text file, as columns of data separated by
+white space, use \texttt{read.table}. If your data are stored as 
+numbers separated by commas, use \texttt{read.csv}.
+
+If your data are in a spreadsheet file, use your spreadsheet program
+to Export or Write the data as a csv (comma-separated values) text file.
+Then in \R\ use \texttt{read.csv} to read the data into \R.
+
+For example, suppose your data are stored in a text file
+\texttt{myfile.txt}. The top of the file looks like this:
+
+\begin{verbatim}
+  time   depth   temp   bar    RBT   WL
+ "0:00"   0.00   24.8  199.0    99    14
+ "0:04"   1.90   24.8  198.8    99    14
+ "0:08"   2.76   24.8  198.8    99    14
+ "0:12"   3.70   24.8  198.8    99    14
+ "0:16"   4.66   24.8  198.5    98    14
+ "0:20"   5.50   24.8  198.5    96    14
+ "0:24"   6.82   24.8  198.5    93    14
+
+\end{verbatim}
+
+To read these data into \R, type
+
+<<eval=FALSE>>=
+mydata <- read.table("myfile.txt", header=TRUE, as.is=TRUE)
+@ 
+<<echo=FALSE,results=hide>>=
+data(baron)
+mydata <- baron
+@ 
+
+The argument \verb!header=TRUE! tells \R\ that the first line of the 
+file is a header, containing text labels for the columns. The argument
+\verb!as.is=TRUE! ensures that the character strings representing the 
+elapsed time (\verb!"0:04"! and so on) will be stored as character strings
+and not converted to another format.
+
+\subsubsection*{Convert to the right format in \R}
+
+The uploaded profile data should now be converted to a \texttt{data.frame} 
+with two columns,
+the first column containing the elapsed time and the second column
+containing the depth (in metres) recorded at each time. 
+
+The elapsed
+times can be either a vector of character strings
+in minutes-and-seconds format
+\texttt{mm:ss} or hours-minutes seconds \texttt{hh:mm:ss},
+or a vector of integer times measured in \emph{seconds}
+of elapsed time, or an object of class \texttt{difftime}
+containing the elapsed times in any time unit. 
+
+Continuing our example, the dataset \texttt{mydata} is
+already a data frame in \R, but it has too many columns:
+
+<<>>=
+head(mydata)
+@ 
+
+All we need to do is to extract the first two columns, which contain the
+elapsed time and the depth:
+
+<<>>=
+mydf <- mydata[ , 1:2]
+@ 
+
+Note the comma. As a last check:
+
+<<>>=
+head(mydf)
+is.character(mydf[,1])
+@ 
+
+We have confirmed that the data frame \texttt{mydf} is in the 
+required format.
+
+\subsubsection*{Pass data to the function \texttt{dive}}
+
+Finally we pass this data
+frame as an argument to the function \texttt{dive}:
+
+<<>>=
+d <- dive(mydf)
+@ 
+
+Another example of such a data frame, uploaded from a dive computer,
+is provided in the \texttt{baron} dataset supplied with the
+package. This is a profile from a dive on the \emph{Baron Gautsch}
+wreck in Croatia, conducted by Vittorio Broglio. Try the following:
+
+<<>>=
+data(baron)
+mydf <- baron[, 1:2]
+baronprof <- dive(mydf[,1:2])
+@ 
+
+\subsection{Installed dive profiles}
+
+The package also provides 11 real dive profiles that have already been
+converted to \texttt{"dive"} objects. They were kindly supplied by 
+Pedro Antonio Neves. 
+
+\SweaveOpts{width=10,height=6}
+\setkeys{Gin}{width=0.9\textwidth}
+
+<<fig=TRUE>>=
+data(pedro)
+plot(pedro902)
+@ 
+
+\subsection{Manipulating dive profiles}
+
+Dive profiles can also be manipulated after they are created.
+This allows you, for example, to modify the deepest portion
+of a dive (diving to a deeper depth or for a longer duration),
+to abort a dive prematurely, to cut-and-paste several dives together,
+or to consider the tissue saturation incurred by a particular
+segment of a dive.
+
+The commands \texttt{depths.dive} and \texttt{times.dive}
+extract the depths and elapsed times at each waypoint during the dive.
+
+<<>>=
+d <- dive(c(30, 20), c(5, 3))
+depths.dive(d)
+times.dive(d)
+@ 
+
+The depths can be modified using \verb!depths.dive<-!. 
+In the example above, \texttt{d} is a dive to 30 metres for 20
+minutes, starting and finishing at the surface. 
+To change the depth of the bottom stage to 35 metres, we could
+type
+
+<<>>=
+depths.dive(d) <- c(0, 35, 35, 5, 5, 0)
+d
+@ 
+
+Thanks to the wonderful features of \R, we could alternatively 
+have typed
+
+<<>>=
+depths.dive(d)[2:3] <- 35
+@ 
+
+which means that the depths of the second and third waypoints are 
+reset to 35 metres.
+
+Similarly the elapsed times can be modified using
+\verb!times.dive<-!. It may be more convenient to use the
+functions \texttt{durations.dive} and
+\verb!durations.dive<-! which give the duration of each stage
+(the time between two successive waypoints). 
+For example 
+
+<<>>=
+durations.dive(d)[2] <- 25
+@ 
+
+means that the diver now spends 25 minutes at the bottom instead of 20 minutes.
+
+To extract only part of a dive profile, use \texttt{chop.dive}:
+<<>>=
+chop.dive(d, 0, 10)
+@ 
+
+To paste together two dive profiles or fragments of dive profiles,
+simply give them as arguments to \texttt{dive}. For example, suppose we
+want to explore the effect of adding an extra safety stop at 9 metres
+in the dive \texttt{pedro902}. 
+
+\SweaveOpts{width=10,height=6}
+\setkeys{Gin}{width=0.7\textwidth}
+
+<<fig=TRUE>>=
+data(pedro)
+tim <- times.dive(pedro902)
+dep <- depths.dive(pedro902)
+plot(pedro902)
+@ 
+
+We need to determine the time point at which
+the safety stop should be inserted. This is the last time at which
+the diver is deeper than 9 metres:
+
+<<>>=
+t9 <- max(tim[dep >= 9])
+t9
+@ 
+
+Cut the dive into two pieces:
+
+<<>>=
+before <- chop.dive(pedro902, 0, t9)
+after <- chop.dive(pedro902, t9)
+@ 
+
+Finally paste them together with the new safety stop:
+
+<<fig=TRUE>>=
+newdive <- dive(before, c(9, 5), after)
+plot(newdive)
+@ 
+
+\newpage
+\section{Decompression Calculations}
+
+\subsection{Overview}
+
+The \pkg{scuba} package performs the mathematical calculations of
+decompression theory:
+\begin{itemize}
+  \item the theoretical No Decompression Limit (maximum duration of a
+  no-decompression dive to a specified depth) can be computed by
+  \texttt{ndl(depth)}
+  \item the quantity of nitrogen dissolved in the diver's body
+  after a dive \texttt{d} can be computed by \texttt{haldane(d)}
+  \item the quantity of nitrogen dissolved in the diver's body
+  at each instant \bold{during} a dive \texttt{d} can be computed by
+  \texttt{haldane(d, progressive=TRUE)}
+  or plotted interactively by \texttt{showstates(d)}.
+\end{itemize}
+
+These calculations are based on the classical theory of
+decompression originated by Haldane (Boycott et al, 1908).
+
+Bubble theory calculations are not yet implemented.
+
+\subsection{Model parameters}
+
+In `Haldane' calculations, the diver's body is idealised
+as a set of independent compartments, each connected directly to the
+breathing gas, and governed by classical (exponential) diffusion.
+
+The model parameters (the number of compartments, their diffusion
+rates, and the maximum tolerated nitrogen tension in each compartment)
+may be chosen by the user.
+By default, the model parameters are taken from the DSAT model
+which is the basis of the PADI Recreational Dive Planner.
+Alternatively, the user can choose from a variety of standard compartment
+models using the command \texttt{pickmodel}, or
+construct a new model using \texttt{hm}.
+
+<<>>=
+m <- pickmodel("USN")
+m
+@ 
+
+\subsection{No-decompression limits}
+
+No-decompression limits (the maximum duration of a no-decompression
+dive to a given depth) can be calculated using the function
+\texttt{ndl}. For example \texttt{ndl(30)} gives the 
+theoretical NDL for a dive to 30 metres,
+predicted by the DSAT model. To use the classical US Navy model instead,
+type \texttt{ndl(30, model="USN")} or 
+\texttt{ndl(30, model=pickmodel("USN"))}.
+
+<<>>=
+ndl(30, model="USN")
+@ 
+
+The result states that the NDL is 23.5 minutes and the controlling tissue
+(the tissue which reaches saturation at 23.5 minutes) is tissue number 2
+in the USN model.
+
+\subsection{Tissue saturations}
+
+The nitrogen tension (the quantity of dissolved nitrogen,
+in atmospheres absolute) in the diver's body after 
+a dive, can be calculated using the function
+\texttt{haldane}. If \texttt{d} is a dive object
+then \texttt{haldane(d)} returns a data frame containing the
+nitrogen tissue tensions (ata) at the end of the dive,
+in each of the 8 tissue compartments
+of the DSAT model. 
+
+<<>>=
+d <- dive(c(18,60), c(5,5))
+haldane(d)
+@ 
+
+To use the US Navy model instead,
+type \texttt{haldane(d, "USN")} or \texttt{haldane(d, pickmodel("USN"))}.
+
+The \emph{relative} tissue tension is the tissue tension expressed
+as a fraction of the maximum tissue tension tolerated at the surface (the
+surfacing $M$-value). To obtain relative tissue tensions, use
+the argument \texttt{relative=TRUE}:
+
+<<>>=
+haldane(d, relative=TRUE)
+@ 
+
+To compute the nitrogen tissue tensions at each waypoint during the
+dive, use \texttt{haldane(d, progressive=TRUE)}. This produces an array of
+numbers, which is best visualised as a surface or as a colour image:
+
+\SweaveOpts{width=9,height=6}
+\setkeys{Gin}{width=0.9\textwidth}
+
+<<eval=FALSE>>=
+data(pedro)
+h <- haldane(pedro902, progressive=TRUE, relative=TRUE)
+tim <- times.dive(pedro902)
+tiss <- row.names(as.data.frame(pickmodel("D")))
+ntiss <- length(tiss)
+image(tim, 1:ntiss, h, xlab="Time", ylab="Tissue", axes=FALSE)
+axis(1)
+axis(2, at=1:ntiss, labels=tiss)
+@ 
+<<fig=TRUE,echo=FALSE,results=hide>>=
+tim <- times.dive(pedro902)
+tiss <- row.names(as.data.frame(pickmodel("D")))
+ntiss <- length(tiss)
+image(tim, 1:ntiss, hald902, xlab="Time", ylab="Tissue", axes=FALSE)
+axis(1)
+axis(2, at=1:ntiss, labels=tiss)
+@ 
+
+\SweaveOpts{width=6,height=6}
+\setkeys{Gin}{width=0.9\textwidth}
+
+<<eval=FALSE>>=
+persp(tim, 1:ntiss, h,
+      theta=-45, shade=0.5, col="yellow", border=NA,
+      xlab="Time", ylab="Tissue", zlab="Relative saturation")
+@ 
+<<fig=TRUE,echo=FALSE,results=hide>>=
+persp(tim, 1:ntiss, hald902,
+      theta=-45, shade=0.5, col="yellow", border=NA,
+      xlab="Time", ylab="Tissue", zlab="Relative saturation")
+@ 
+
+Alternatively, to visualise the nitrogen tissue tensions during the dive,
+use the interactive function \texttt{showstates}.
+This plots the dive and waits for you to click on
+a position in the graph. The tissue tensions at that
+instant are displayed as a bar plot. Here is a screenshot:
+
+\SweaveOpts{width=10,height=5}
+\setkeys{Gin}{width=\textwidth}
+
+<<fig=TRUE,echo=FALSE,results=hide>>=
+opa <- par(mfrow=c(1,2))
+pozzie <- barplot(hald,
+                  xlab=paste("Tissues (ZH-L16A)", sep=""),
+                  ylab="Relative saturation",
+                  main=paste("Time= 35 min\n",
+                    "Accumulated oxygen toxicity", round(otu, 1)),
+                      ylim=range(c(0, 1.1, 1.1 * max(hald))),
+                      names.arg=NULL)
+mtext(side=1, at=pozzie[1], line=1, text="Fast")
+mtext(side=1, at=pozzie[17], line=1, text="Slow")
+abline(h=1, lty=3, col="red")
+plot(pedro902)
+abline(v=35, lty=2, col="green")
+par(opa)
+@ 
+
+\subsection{Oxygen toxicity}
+
+The total (pulmonary) oxygen toxicity incurred during a dive can be computed
+by \texttt{oxtox}. 
+
+<<>>=
+oxtox(pedro902)
+@ 
+
+This returns a number in the mysterious OTU (oxygen
+toxicity units). The maximum tolerable dose per day is usually reckoned as 1500
+OTU. Allowing 650 OTU for recompression therapy implies a working
+maximum of 850 OTU per day.
+
+\newpage
+\section{Technical diving}
+\label{S:tech}
+
+\subsection{Gases}
+
+A {\bf breathing gas} is represented by an object of class \texttt{"gas"}.
+The object \texttt{air} is a representation of compressed air
+(21\% oxygen, 79\% nitrogen) as an object of this class.
+(Don't reassign another value to this object!!!)
+
+Nitrox mixtures (mixtures of oxygen and nitrogen) can be
+represented using the function \texttt{nitrox}.
+
+<<>>=
+nitrox(0.36)
+nitrox(1)
+nitrox(0.21)
+@ 
+
+Trimix (a mixture of oxygen, nitrogen and helium) can also be
+represented, using the command \texttt{trimix}.
+For example, Trimix 15/50
+(containing 15\% oxygen, 50\% helium and 35\% nitrogen)
+is represented by \texttt{trimix(0.15, 0.5)}.
+
+<<>>=
+trimix(0.18, 0.45)
+@ 
+
+There are methods for \texttt{print} and \texttt{summary}
+for gas objects. The print method just prints the name of the 
+gas, as shown above. The summary method is a bit more informative:
+
+<<>>=
+summary(nitrox(0.36))
+@ 
+
+\noindent 
+Standard nitrox calculations are also available: 
+
+\begin{tabular}[l]{ll}
+  \texttt{ead} & equivalent air depth\\
+  \texttt{mod} & maximum operating depth\\
+  \texttt{maxmix} & richest nitrox mix for a given depth
+\end{tabular}
+
+\noindent
+To find the equivalent air depth for Nitrox 32 at 24 metres,
+
+<<>>=
+ead(24, nitrox(0.32))
+@ 
+
+\noindent
+To find the maximum operating depth for Nitrox 36, with the
+partial pressure of oxygen at most 1.5 ata,
+
+<<>>=
+mod(nitrox(0.36), 1.5)
+@ 
+
+\noindent
+To find the richest Nitrox mix for a dive to 40 metres
+
+<<>>=
+maxmix(40, 1.5)
+@ 
+
+\subsection{Diving on different gases}
+
+Every \verb!"dive"! object contains information
+about the breathing gas or gases used in the dive.
+The default breathing gas is air.
+
+As mentioned earlier, the function \texttt{dive} interprets its arguments
+as a sequence of actions or events occurring during the dive.
+If an argument is a vector of length 2, it is interpreted
+as \texttt{c(depth,time)} specifying the depth and duration
+of a stage of the dive. If the argument is a single number,
+it is interpreted as a depth, meaning that the diver ascends or
+descends to this depth.
+
+Each argument to \texttt{dive} may also be a "gas" object,
+like \texttt{nitrox(0.32)}, 
+which means that the diver switches to this gas.
+For example,
+
+<<>>=
+dive(nitrox(0.32), c(30,20))
+@ 
+
+\noindent
+means a dive to 30 metres for 20 minutes conducted on EAN 32
+(Nitrox 0.32) from start to finish.
+The command
+
+<<>>=
+dive(c(30,20), 5, nitrox(0.36), c(5,3))
+@ 
+
+\noindent
+creates a dive on air to 30 metres for 20 minutes, ascending to 5 metres
+while breathing air, then switching to EAN 36 for a safety stop
+at 5 metres for 3 minutes.
+
+\subsection{Important tip}
+
+If you specify a dive profile on nitrox or trimix, and 
+if part of the dive profile is at the surface (depth zero),
+then {\bf the package will not assume you breathe air at the
+surface}. The package doesn't know whether you the regulator out of
+your mouth when you reach the surface.
+It's perfectly sensible for a diver to conduct a decompression
+stop on pure oxygen at 3 metres, then to surface and continue breathing 
+pure oxygen at the surface.
+So the following two dive profiles are different:
+
+<<>>=
+dive(nitrox(0.25), c(30, 20), c(5,3), c(0, 20))
+dive(nitrox(0.25), c(30, 20), c(5,3), 0, air, c(0, 20))
+@ 
+
+\noindent
+The user must decide whether the breathing gas at the surface is air or
+some other gas. 
+
+\subsection{Tank list}
+
+A dive object has a \emph{tank list} which is a list of the
+tanks of breathing gas that were used (or were available to be used)
+during the dive. The function \texttt{tanklist} returns
+this list, and the function \verb!tanklist<-! changes the list.
+
+For example,
+<<>>=
+d <- dive(c(30,20), c(5,5))
+@ 
+
+\noindent
+is a dive conducted using air.
+To modify it to a dive that used nitrox EANx 32, simply type
+
+<<>>=
+tanklist(d) <- list(nitrox(0.32))
+@ 
+
+\noindent
+Here is a dive conducted using air (tank 1) for the deep section and EANx 50
+(tank 2) for the decompression stops at 6 metres and 3 metres.
+
+<<>>=
+d <- dive(air, c(30,40), 6, nitrox(0.5), c(6,3), c(3,3))
+@ 
+
+\noindent
+To change the contents of tank 1 to EANx 32, type
+
+<<>>=
+tanklist(d) <- list(nitrox(0.32), nitrox(0.5))
+@ 
+
+\noindent
+or just 
+
+<<>>=
+tanklist(d)[[1]] <- nitrox(0.32)
+@ 
+
+\noindent
+You can also associate a meaningful name with each tank.
+Just give names to the entries in the tank list, for example
+
+<<>>=
+tanklist(d) <- list(deep=nitrox(0.32), deco=nitrox(0.5))
+@ 
+
+\noindent
+or 
+
+<<>>=
+names(tanklist(d)) <- c("deep", "deco")
+@ 
+
+\noindent
+Perhaps the most readable way to specify the gases in a dive is 
+to give them as arguments to the 
+\texttt{dive} command. You specify the tank list as the argument 
+\texttt{tanklist}, and switch between tanks by including an argument of
+the form \verb!tank=number! or \verb!tank=name!. 
+
+<<>>=
+TL <- list(travel=trimix(0.18, 0.45), deco=nitrox(0.6))
+d <- dive(tanklist=TL, tank="travel", c(30,40), 6, 
+            tank="deco", c(6,3), c(3,3))
+@ 
+
+\subsection{Tank switching}
+
+Tank switching and selection,
+i.e.\ which tank is actually used at each stage of the
+dive, is specified by the function \texttt{whichtank}.
+The command \texttt{whichtank(d)}
+returns a vector of integers or character strings,
+identifying which tank in the tank list is in use at each
+waypoint during the dive. That is, \texttt{whichtank(d)[i]} is the tank
+in use at the \texttt{i}th waypoint during the dive.
+The vector \texttt{whichtank(d)} has the same length as the vectors
+\texttt{depths.dive(d)} and \texttt{times.dive(d)}.
+
+<<>>=
+whichtank(d)
+@ 
+
+To change the selection of tanks at each stage during the dive,
+use the function \verb!whichtank<-!. For example,
+to change the dive \texttt{d}
+so that the deco gas is only used at the 3-metre stop, type
+
+<<>>=
+whichtank(d) <- ifelse(depths.dive(d) < 3, "travel", "deco")
+@ 
+
+\noindent
+Alternatively 
+
+<<>>=
+whichtank(d)[depths.dive(d) > 3] <- "travel"
+@ 
+
+\noindent
+would select the travel gas for all parts of the dive deeper than 3 metres.
+
+\subsection{Decompression calculations}
+
+Decompression calculations (\texttt{haldane},
+\texttt{ndl}, \texttt{showstates})
+also work with nitrox and trimix dives.
+
+Decompression calculations with trimix require a Haldane model
+that includes parameters for Helium diffusion.
+Use \texttt{pickmodel("Z")} to select the Buehlmann ZH-L16A model,
+or \texttt{hm} to create a new model that includes
+Helium diffusion.
+
+The total oxygen toxicity incurred during a nitrox or trimix dive
+can also be computed by \texttt{oxtox}.
+
+\section*{Acknowledgements}
+
+The package was written by Adrian Baddeley
+\verb!<adrian@maths.uwa.edu.au>!
+with generous contributions and feedback from Vittorio Broglio
+and Pedro Antonio Neves.
+
+\end{document}

@@ -17,6 +17,8 @@
 \alias{print.summary.gas}
 \alias{print.summary.hm}
 \alias{rate}
+\alias{reconcile.df}
+\alias{resolve.defaults}
 \alias{summary.dive}
 \alias{summary.gas}
 \alias{summary.hm}
@@ -44,6 +46,8 @@ gasnames(fO2, fN2=1-fO2, fHe=1 - fO2 - fN2, ..., full=FALSE)
 \method{print}{summary.gas}(x, \dots)
 \method{print}{summary.hm}(x, \dots)
 rate(speed, time, up)
+reconcile.df(df, tanks)
+resolve.defaults(\dots)
 \method{summary}{dive}(object, \dots)
 \method{summary}{gas}(object, \dots)
 \method{summary}{hm}(object, \dots)

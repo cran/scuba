@@ -9,7 +9,8 @@
   haldane(d,
 	 model=pickmodel("DSAT"),
 	 prevstate=NULL,
-         progressive=FALSE)
+         progressive=FALSE,
+         relative=FALSE)
 }
 \arguments{
   \item{d}{
@@ -27,19 +28,27 @@
   }
   \item{progressive}{
     Logical flag. If \code{TRUE}, the tissue saturations are computed
-    at every time point during the dive. If \code{FALSE}, only the
-    final tissue saturation at the end of the dive is computed.
+    at every time point during the dive. If \code{FALSE} (the default),
+    only the final tissue saturation at the end of the dive is computed.
+  }
+  \item{relative}{
+    Logical flag. If \code{TRUE}, the tissue saturation for each
+    compartment is expressed as a fraction of the surfacing M-value
+    for the compartment. If \code{FALSE} (the default),
+    tissue saturations are expressed as absolute pressures in
+    atmospheres absolute (ata).
   }
 }
 \value{
-  If \code{progressive=FALSE}, a data frame giving
+  If \code{relative=FALSE} and \code{progressive=FALSE}, a data frame giving
   the diver's inert gas saturation state at the end of the
   dive. Each row of the data frame corresponds to a tissue compartment.
   The column \code{N2} gives the nitrogen tension (in atmospheres absolute) of
   each compartment. The column \code{He}, if present, gives the
-  Helium tension in each compartment.
+  Helium tension (in atmospheres absolute) in each compartment.
 
-  If \code{progressive=TRUE}, a three-dimensional array giving
+  If \code{relative=FALSE} and \code{progressive=TRUE},
+  a three-dimensional array giving
   the diver's inert gas saturation state at each time point during the
   dive. The first dimension of the array corresponds to successive time points
   during the dive (the times can be extracted by
@@ -48,6 +57,22 @@
   The third dimension corresponds to the inert gases
   (\code{N2} and/or \code{He}).
   The entries are gas tensions (in atmospheres absolute).
+
+  If \code{relative=TRUE} and \code{progressive=FALSE}, a vector
+  giving the diver's relative saturation of inert gas at the end of the
+  dive. Entries in the vector correspond to tissue compartments.
+  The entries are relative gas tensions, that is,
+  the total inert gas (Nitrogen plus Helium) tissue saturation
+  divided by the surfacing M-value for that compartment.
+
+  If \code{relative=TRUE} and \code{progressive=TRUE},
+  a matrix giving the diver's relative saturation
+  at each time point during the
+  dive. Rows of the array correspond to successive time points
+  during the dive. Columns correspond to the tissue compartments.
+  The entries are relative gas tensions, that is,
+  the total inert gas (Nitrogen plus Helium) tissue saturation
+  divided by the surfacing M-value for that compartment.
 }
 \details{
   This command computes a diver's nitrogen saturation 
