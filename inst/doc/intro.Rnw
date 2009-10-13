@@ -888,9 +888,13 @@ at 5 metres for 3 minutes.
 
 If you specify a dive profile on nitrox or trimix, and 
 if part of the dive profile is at the surface (depth zero),
-then {\bf the package will not assume you breathe air at the
-surface}. The package doesn't know whether you the regulator out of
-your mouth when you reach the surface.
+then \underline{\bf the package will not assume you breathe air at the
+surface}. The package doesn't automatically know
+whether you continued breathing from the regulator
+when you reached the surface. It is equally plausible that
+the diver removed the regulator and began breathing air at the surface,
+or switched to a snorkel for a surface swim,
+or breathed from the regulator for a surface swim.
 It's perfectly sensible for a diver to conduct a decompression
 stop on pure oxygen at 3 metres, then to surface and continue breathing 
 pure oxygen at the surface.

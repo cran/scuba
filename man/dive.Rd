@@ -84,7 +84,7 @@
   by specifying values for \code{begin} and \code{end}).
 
   Initially the descent rate is set to 30 metres per minute,
-  the descent rate is 18 metres per minute, and the breathing gas is
+  the ascent rate is 18 metres per minute, and the breathing gas is
   air. These settings may be changed during the dive
   by the \code{...} arguments.
 

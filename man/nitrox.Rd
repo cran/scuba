@@ -28,7 +28,7 @@
 
   For the standard Nitrox calculations, see \code{\link{ead}}
   and \code{\link{mod}}.
-  To determine whether a gas is nitrox, use \code{\lnk{is.nitrox}}.
+  To determine whether a gas is nitrox, use \code{\link{is.nitrox}}.
   
   There are methods for \code{print} and \code{summary}
   for objects of class \code{"gas"}.
