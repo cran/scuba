@@ -42,7 +42,7 @@ chop.dive(d, t0=0, t1=max(times.dive(d)))
    dive(chop.dive(d, 0, 10))
 }
 \author{Adrian Baddeley
-  \email{adrian@maths.uwa.edu.au}
+  \email{Adrian.Baddeley@csiro.au}
   \url{http://www.maths.uwa.edu.au/~adrian/}
 }
 \keyword{utilities}

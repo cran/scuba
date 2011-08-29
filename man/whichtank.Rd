@@ -52,7 +52,7 @@ whichtank(d) <- value
   character strings.
 }
 \author{Adrian Baddeley
-  \email{adrian@maths.uwa.edu.au}
+  \email{Adrian.Baddeley@csiro.au}
   \url{http://www.maths.uwa.edu.au/~adrian/}
 }
 \seealso{

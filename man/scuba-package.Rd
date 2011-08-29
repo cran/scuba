@@ -1,4 +1,4 @@
-\name{scuba}
+\name{scuba-package}
 \alias{scuba-package}
 \alias{scuba}
 \docType{package}
@@ -25,6 +25,11 @@
   and statistical basis of decompression theory. It is emphatically
   not designed for actual use in scuba diving and related activities.
   See the detailed disclaimer in \code{\link{scuba.disclaimer}}.
+
+  Following is a summary of the main features of the package.
+  For a more detailed explanation, with illustrations, see
+  the vignette \emph{Introduction to the Scuba package} which
+  accompanies the package. 
 }
 \section{Dive profiles}{
   A \emph{dive profile} gives the diver's depth as a function of elapsed
@@ -136,7 +141,12 @@
   theoretical NDL for a dive to 30 metres,
   predicted by the DSAT model. To use the classical US Navy model instead,
   type \code{ndl(30, model="USN")} or \code{ndl(30, model=pickmodel("USN"))}.
-
+  
+  The \sQuote{best}
+  double no-decompression dive to given depths \code{d1} and \code{d2}
+  can be calculated by \code{\link{bestdoubledive}} according to
+  the algorithm of Baddeley and Bassom (2012).
+  
   The nitrogen tension (the quantity of dissolved nitrogen,
   in atmospheres absolute) in the diver's body after 
   a dive, can be calculated using the function
@@ -321,6 +331,13 @@
   General Public License", a copy of which is distributed with the package.
 }
 \references{
+  Baddeley, A. (2011) \emph{Introduction to the scuba package}.
+  Vignette accompanying this package.
+  
+  Baddeley, A. and Bassom, A.P. (2012)
+  Classical theory of decompression and the design of scuba diving tables.
+  To appear in \emph{The Mathematical Scientist}.
+  
   Bookspan, J. (1995) Diving physiology in plain English.
   Undersea and Hyperbaric Medicine Society, Kensington, Maryland (USA).
   ISBN 0-930406-13-3.
@@ -355,7 +372,7 @@
 }
 \author{
   Adrian Baddeley
-  \email{adrian@maths.uwa.edu.au}
+  \email{Adrian.Baddeley@csiro.au}
   \url{http://www.maths.uwa.edu.au/~adrian/}
   with contributions from Vittorio Broglio
   and Pedro Antonio Neves.

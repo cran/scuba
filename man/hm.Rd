@@ -132,7 +132,7 @@
      He=list(HalfT=c(5,10,30), M0=c(1,1,1), dM=c(1,1,1)))
 }
 \author{Adrian Baddeley
-  \email{adrian@maths.uwa.edu.au}
+  \email{Adrian.Baddeley@csiro.au}
   \url{http://www.maths.uwa.edu.au/~adrian/}
 }
 \keyword{utilities}

@@ -1,7 +1,18 @@
-.First.lib <- function(lib, pkg) {
-    v <- read.dcf(file=system.file("DESCRIPTION", package="scuba"),
-                  fields="Version")
-    cat(paste("\nscuba", v, "\n"))
-    cat("Type \"help(scuba)\" for an introduction\n")
-    cat("Read the warnings in \"help(scuba.disclaimer)\" \n")
+#
+#  First.R
+#
+#  $Revision: 1.1 $ $Date: 2011/08/05 03:04:23 $
+#
+
+.onAttach <- function(libname, pkgname) {
+  v <- read.dcf(file=system.file("DESCRIPTION", package=pkgname),
+                fields="Version")
+  msg <- paste("scuba", v,
+               "\nType", sQuote("help(scuba)"),
+               "for an introduction",
+               "\nRead the warnings in", sQuote("help(scuba.disclaimer)"))
+  packageStartupMessage(msg)
+  invisible(NULL)
 }
+
+  

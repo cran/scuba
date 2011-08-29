@@ -5,6 +5,9 @@
 \usepackage[colorlinks=true,urlcolor=blue]{hyperref}
 \usepackage{color}
 
+\usepackage{anysize}
+\marginsize{2cm}{2cm}{2cm}{2cm}
+
 \newcommand{\pkg}[1]{\texttt{#1}}
 \newcommand{\bold}[1]{{\bf {#1}}}
 \newcommand{\R}{{\sf R}}
@@ -13,15 +16,17 @@
 %\bibliographystyle{plain}
 \thispagestyle{empty}
 
-\title{Introduction to the \texttt{scuba} package}
-\author{Adrian Baddeley}
-\date{October 2008}
-\maketitle
-
-
 <<echo=FALSE,results=hide>>=
 library(scuba)
+sversion <- read.dcf(file = system.file("DESCRIPTION", package = "scuba"),
+         fields = "Version")
 @ 
+
+\title{Introduction to the \texttt{scuba} package}
+\author{Adrian Baddeley}
+\date{Package version \texttt{\Sexpr{sversion}}\\ Last edited August 2011}
+\maketitle
+
 
 This is an introduction to the features of 
 \pkg{scuba}, a package in \R\ 
@@ -209,7 +214,7 @@ The breathing gas or gases in a dive profile can be changed easily,
 so it is easy to evaluate how a different choice of breathing gas
 would have affected nitrogen saturation, helium saturation and oxygen toxicity.
 
-\newpage
+%\newpage
 \section{Getting started}
 \label{S:start}
 
@@ -276,7 +281,7 @@ in any sense whatsoever. Even if correctly computed,
 the predictions of a theoretical physical model may not be correct
 predictions. 
 
-\newpage
+%\newpage
 \section{Dive profiles}
 \label{S:diveprof}
 
@@ -608,7 +613,7 @@ newdive <- dive(before, c(9, 5), after)
 plot(newdive)
 @ 
 
-\newpage
+%\newpage
 \section{Decompression Calculations}
 
 \subsection{Overview}
@@ -619,6 +624,9 @@ decompression theory:
   \item the theoretical No Decompression Limit (maximum duration of a
   no-decompression dive to a specified depth) can be computed by
   \texttt{ndl(depth)}
+  \item the ``best'' double no-decompression dive to specified depths
+    \texttt{d1} and \texttt{d2} with a specified surface interval \texttt{s}
+    can be computed by \texttt{bestdoubledive(d1, d2, s)}
   \item the quantity of nitrogen dissolved in the diver's body
   after a dive \texttt{d} can be computed by \texttt{haldane(d)}
   \item the quantity of nitrogen dissolved in the diver's body
@@ -669,6 +677,19 @@ ndl(30, model="USN")
 The result states that the NDL is 23.5 minutes and the controlling tissue
 (the tissue which reaches saturation at 23.5 minutes) is tissue number 2
 in the USN model.
+
+\subsection{Double no-decompression dives}
+
+The ``best'' double no-decompression dive to specified depths
+can be computed by \texttt{bestdoubledive}.
+
+<<>>=
+bestdoubledive(40, 12, 15)
+@ 
+
+The best double dive to 40 metres, followed by a surface interval of 
+15 minutes, followed by a dive to 12 metres, is to dive to 40 metres for
+7.3 minutes and to 12 metres for 130.4 minutes.
 
 \subsection{Tissue saturations}
 
@@ -778,7 +799,7 @@ toxicity units). The maximum tolerable dose per day is usually reckoned as 1500
 OTU. Allowing 650 OTU for recompression therapy implies a working
 maximum of 850 OTU per day.
 
-\newpage
+%\newpage
 \section{Technical diving}
 \label{S:tech}
 
@@ -888,8 +909,11 @@ at 5 metres for 3 minutes.
 
 If you specify a dive profile on nitrox or trimix, and 
 if part of the dive profile is at the surface (depth zero),
-then \underline{\bf the package will not assume you breathe air at the
-surface}. The package doesn't automatically know
+then 
+\begin{quote}
+  {\bf the package will not assume you breathe air at the surface.}
+\end{quote}
+The package doesn't automatically know
 whether you continued breathing from the regulator
 when you reached the surface. It is equally plausible that
 the diver removed the regulator and began breathing air at the surface,
@@ -1033,8 +1057,9 @@ can also be computed by \texttt{oxtox}.
 \section*{Acknowledgements}
 
 The package was written by Adrian Baddeley
-\verb!<adrian@maths.uwa.edu.au>!
+\verb!<Adrian.Baddeley@csiro.au>!
 with generous contributions and feedback from Vittorio Broglio
-and Pedro Antonio Neves.
+and Pedro Antonio Neves. This package incorporates results of joint research
+with Andrew Bassom.
 
 \end{document}

@@ -36,7 +36,7 @@ tanklist(d) <- value
   gases (objects of class \code{"gas"}). 
 }
 \author{Adrian Baddeley
-  \email{adrian@maths.uwa.edu.au}
+  \email{Adrian.Baddeley@csiro.au}
   \url{http://www.maths.uwa.edu.au/~adrian/}
 }
 \seealso{
