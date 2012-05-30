@@ -1,5 +1,6 @@
 \name{scuba-internal}
 \alias{M0mix}
+\alias{Mmix}
 \alias{allspecies}
 \alias{as.character.gas}
 \alias{as.data.frame.hm}
@@ -29,6 +30,7 @@
 }
 \usage{
 M0mix(model, fN2, fHe)
+Mmix(model, depth, fN2, fHe)
 allspecies(d, inert)
 \method{as.character}{gas}(x, \dots)
 \method{as.data.frame}{hm}(x, \dots)

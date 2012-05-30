@@ -6,7 +6,7 @@
   saturation state at any intermediate stage indicated by the mouse.
 }
 \usage{
- showstates(d, model="DSAT")
+ showstates(d, model="DSAT", relative=TRUE, deco=FALSE)
 }
 \arguments{
   \item{d}{
@@ -16,9 +16,30 @@
     The decompression model. Either an object of class \code{"hm"}
     or a character string identifying a model.
   }
+  \item{relative}{
+    Logical flag indicating whether to compute relative tissue
+    saturations. If \code{FALSE}, tissue saturations are expressed
+    as absolute pressures in atmospheres absolute (ata).
+    If \code{TRUE} (the default),
+    the tissue saturation for each
+    compartment is expressed as a fraction of the surfacing M-value
+    for the compartment. (Alternatively if \code{deco=TRUE} then tissue
+    saturation is expressed as a fraction of the M-value at current depth.)
+  }
+  \item{deco}{
+    Logical flag indicating whether to calculate relative saturations
+    for a decompression dive.
+    If \code{deco=FALSE}, then relative tissue saturations
+    are computed by dividing the absolute tissue saturation by the
+    surfacing M-value, as appropriate for a no-decompression dive.
+    If \code{deco=TRUE}, then relative tissue saturations are computed
+    by dividing the absolute tissue saturation by the M-value at the
+    current depth, as appropriate for a decompression dive.
+    This argument applies only when \code{relative=TRUE}.
+  }
 }
 \value{
-  The vector of nitrogen tensions (in ata) in the most recently clicked
+  The vector of absolute nitrogen tensions (in ata) in the most recently clicked
   stage.
 }
 \details{
@@ -32,7 +53,8 @@
   and plots them as a bar graph. The cumulative oxygen toxicity is also
   computed using \code{\link{oxtox}}.
 
-  Note that the bar graph shows the \emph{relative} nitrogen tensions in each
+  Note that (by default)
+  the bar graph shows the \emph{relative} nitrogen tensions in each
   compartment, that is, the tissue nitrogen tension divided by the
   "surfacing M-value" (tissue maximum nitrogen tension for a
   no-decompression dive at sea level). 
@@ -49,7 +71,7 @@
 }
 \examples{
   \dontrun{
-    showstates(dive(c(30,20)), "ZH")
+    showstates(dive(c(30,20), c(5,3)), "ZH")
   }
 }
 \author{Adrian Baddeley

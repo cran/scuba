@@ -1,7 +1,7 @@
 #
 # 	hm.R
 #
-#	$Revision: 1.16 $	$Date: 2008/06/23 06:06:14 $
+#	$Revision: 1.19 $	$Date: 2012/05/30 02:16:35 $
 #
 ################################################################
 #
@@ -9,26 +9,61 @@
 #
 #
 
-hm <- function(HalfT, M0=NULL, dM=NULL, ...,
-               N2 = list(HalfT=HalfT, M0=M0, dM=dM),
-               He = NULL,
-               title="user-defined model",
-               cnames=NULL,
-               mixrule="N2") {
-  if(length(list(...)) > 0)
-    warning("Some unrecognised arguments were ignored")
-  validate <- function(X, cnames) {
+hm <- local({
+
+  # main function
+  hm <- function(HalfT, M0=NULL, dM=NULL, ...,
+                 N2 = list(HalfT=HalfT, M0=M0, dM=dM),
+                 He = NULL,
+                 title="user-defined model",
+                 cnames=NULL,
+                 mixrule="N2") {
+    if(length(list(...)) > 0)
+      warning("Some unrecognised arguments were ignored")
+    
+    N2 <- validate(N2, cnames)
+    pars <- list(N2=N2)
+    nc <- nrow(N2)
+    if(!is.null(He)) {
+      He <- validate(He, cnames)
+      if(nrow(He) != nc)
+        stop("Data for He and N2 have different numbers of compartments")
+      pars <- append(pars, list(He = He))
+    }
+
+    out <- list(title=title, pars=pars)
+  
+    mixtable <- c("interpolate", "N2")
+    if(is.na(m <- pmatch(mixrule, mixtable)))
+      stop(paste("Unrecognised option", dQuote(mixrule), "for mixrule"))
+    out$mixrule <- mixtable[m]
+
+    class(out) <- c("hm", class(out))
+    return(out)
+  }
+
+  # helper function to validate entries
+  validate <- function(X, cnames, validnames=c("HalfT", "M0", "dM")) {
     Xname <- deparse(substitute(X))
     isnull <- unlist(lapply(X, is.null))
     X <- X[!isnull]
     ok <- unlist(lapply(X, function(z) { is.numeric(z) && all(z > 0) }))
     if(!all(ok))
       stop(paste("All", Xname, "data should be positive numbers"))
-    if(!all(nzchar(names(X))))
+    namesX <- names(X)
+    if(length(namesX) == 0)
+      stop(paste("The components of", sQuote(Xname), "must be labelled",
+                 commasep(sQuote(validnames))))
+    else if(!all(nzchar(namesX)))
       stop(paste("some components of", sQuote(Xname), "are not labelled"))
-    else if(!all(names(X) %in% c("HalfT", "M0", "dM")))
-      stop(paste("some components of", sQuote(Xname),
-                 "are not labelled HalfT, M0 or dM"))
+    else if(!all(ok <- namesX %in% validnames)) {
+      bad <- !ok
+      stop(paste("Unrecognised",
+                 ngettext(sum(bad), "label", "labels"),
+                 commasep(dQuote(namesX[bad])),
+                 "in list", sQuote(Xname), "- recognised names are",
+                 commasep(dQuote(validnames))))
+    }
     if(with(X, is.null(M0) && !is.null(dM)))
       stop("If dM is provided, then M0 must be provided")
     X <- as.data.frame(X)
@@ -41,27 +76,9 @@ hm <- function(HalfT, M0=NULL, dM=NULL, ...,
     return(X)
   }
 
-  N2 <- validate(N2, cnames)
-  pars <- list(N2=N2)
-  nc <- nrow(N2)
-  if(!is.null(He)) {
-    He <- validate(He, cnames)
-    if(nrow(He) != nc)
-      stop("Data for He and N2 have different numbers of compartments")
-    pars <- append(pars, list(He = He))
-  }
-
-  out <- list(title=title, pars=pars)
-  
-  mixtable <- c("interpolate", "N2")
-  if(is.na(m <- pmatch(mixrule, mixtable)))
-    stop(paste("Unrecognised option", dQuote(mixrule), "for mixrule"))
-  out$mixrule <- mixtable[m]
-
-  class(out) <- c("hm", class(out))
-  return(out)
-}
-
+  hm
+})
+            
 print.hm <- function(x, ...) {
   stopifnot(inherits(x, "hm"))
   cat("Haldane type decompression model\n")
@@ -160,11 +177,16 @@ capable <- function(model, g="N2", what="HalfT") {
 
 param <- function(model, species="N2", what="HalfT") {
   stopifnot(inherits(model, "hm"))
-  return(model$pars[[species]][[what]])
+  spec <- model$pars[[species]]
+  result <- spec[[what]]
+  if(is.null(result)) return(NULL)
+  names(result) <- row.names(spec)
+  return(result)
 }
 
-#######
-#
+########
+
+# compute surfacing M-value for a mixture of inert gases
 
 M0mix <- function(model, fN2, fHe) {
   stopifnot(inherits(model, "hm"))
@@ -202,6 +224,54 @@ M0mix <- function(model, fN2, fHe) {
          }
          )
   return(M0)
+}
+
+# compute M-value at depth for a mixture of inert gases
+
+Mmix <- function(model, depth, fN2, fHe) {
+  stopifnot(inherits(model, "hm"))
+  if(!capable(model, "N2", "dM"))
+    stop("Model does not provide M-value gradients (dM) for Nitrogen")
+  mixrule <- summary(model)$mixrule
+  stopifnot(length(depth) == length(fN2))
+  ntimes <- length(depth)
+  M0.N2 <- param(model, "N2", "M0")
+  dM.N2 <- param(model, "N2", "dM")
+  # pressure components
+  one <- rep(1, ntimes)
+  extraP <- depth/10
+  if(all(fHe == 0))
+    return(outer(one, M0.N2, "*") + outer(extraP, dM.N2, "*"))
+  # Helium is present
+  if(!capable(model, "He", "M0"))
+    stop("Model does not provide surfacing M-values for Helium")
+  if(!capable(model, "He", "dM"))
+    stop("Model does not provide M-value gradients (dM) for Helium")
+  switch(mixrule,
+         N2 = { 
+           M <- outer(one, M0.N2, "*") + outer(extraP, dM.N2, "*")
+         },
+         interpolate={
+           M0.He <- param(model, "He", "M0")
+           dM.He <- param(model, "He", "dM")
+           # Buehlmann equivalent parameters
+           aN2 <- M0.N2 - dM.N2
+           bN2 <- 1/dM.N2
+           aHe <- M0.He - dM.He
+           bHe <- 1/dM.He
+           # mixture fraction (time-dependent)
+           fIG <- fN2+fHe
+           denom <- ifelse(fIG > 0, fIG, 1)
+           z <- fN2/denom
+           # apply to Buehlmann parameters
+           a <- outer(z, aN2, "*") + outer(1-z, aHe, "*")
+           b <- outer(z, bN2, "*") + outer(1-z, bHe, "*")
+           # compute M in Buehlmann form
+           extraPmat <- matrix(extraP, length(extraP), ncol(b))
+           M <- a + extraPmat/b
+         }
+         )
+  return(M)
 }
 
   

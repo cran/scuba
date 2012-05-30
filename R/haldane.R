@@ -1,7 +1,7 @@
 #
 # 	haldane.R
 #
-#	$Revision: 1.28 $	$Date: 2008/10/30 04:55:22 $
+#	$Revision: 1.29 $	$Date: 2012/05/30 03:10:23 $
 #
 ####################################################################
 #
@@ -60,7 +60,8 @@ function(d,
 	 model=pickmodel("DSAT"),
 	 prevstate=NULL,
          progressive=FALSE,
-         relative=FALSE) 
+         relative=FALSE,
+         deco=FALSE) 
 {
   stopifnot(is.dive(d))
 
@@ -74,9 +75,17 @@ function(d,
     prevstate <- saturated.state(model, 0)
   else
     prevstate <- conform(prevstate, model)
-  
-  if(!capable(model, d, "M0"))
-    stop("The model does not include data for some of the gases in this dive")
+
+  if(relative) {
+    if(!capable(model, d, "M0"))
+      stop(paste("Cannot compute relative saturations:",
+                 "the model does not include surfacing M-values",
+                 "for some of the gases in this dive"))
+    if(deco && !capable(model, d, "dM"))
+      stop(paste("Cannot compute relative saturations for deco dive:",
+                 "the model does not include M-value gradients (dM)",
+                 "for some of the gases in this dive"))
+  }
 
   species <- y$species
   
@@ -136,13 +145,16 @@ function(d,
   }
 
   # relative saturations
+  fN2 <- d$data$fN2
+  fHe <- d$data$fHe
   if(progressive) {
-    Mvals <- M0mix(model, d$data$fN2, d$data$fHe)
+    Mvals <- if(!deco) M0mix(model,fN2,fHe) else Mmix(model,depths,fN2,fHe) 
     igprofile <- apply(profile, c(1,2), sum) 
     relprofile <- igprofile/Mvals
     return(relprofile)
   } else {
-    Mvals <- M0mix(model, d$data$fN2[n], d$data$fHe[n])
+    Mvals <- if(!deco) M0mix(model, fN2[n], fHe[n]) else
+                       Mmix(model, depths[n], fN2[n], fHe[n])    
     igstate <- apply(state, 1, sum)
     relstate <- igstate/as.vector(Mvals)
     return(relstate)
@@ -155,7 +167,7 @@ function(d,
 #  Interactive display
 #
 
-showstates <- function(d, model="DSAT") {
+showstates <- function(d, model="DSAT", relative=TRUE, deco=FALSE) {
   dname <- deparse(substitute(d))
   stopifnot(is.dive(d))
 
@@ -170,15 +182,19 @@ showstates <- function(d, model="DSAT") {
 
   y <- summary(model)
 
-  Mvals <- M0mix(model, d$data$fN2, d$data$fHe)
-  
   oldpar <- par(mfrow=c(1,2), ask=FALSE)
   frame()
   plot(d, main=dname)
   timepoints <- times.dive(d)
   maxtime <- max(timepoints)
   ntissues <- y$nc
+
+  if(relative) {
+    Mvals <- if(!deco) M0mix(model, d$data$fN2, d$data$fHe) else
+                       Mmix(model, depths.dive(d), d$data$fN2, d$data$fHe)
+  }
   
+
   # precompute time profile of tissue saturation
   cat("precomputing tissue saturations...")
   flush.console()
@@ -187,11 +203,12 @@ showstates <- function(d, model="DSAT") {
   # sum over gas species N2 + He = 'inert gas'
   igprofile <- apply(halprofile, c(1,2), sum) 
                         
-  # convert to relative saturation profile
-  relprofile <- igprofile/Mvals
-  
-  # determine (approx) maximum relative saturation over entire dive
-  maxrelsat <- max(max(relprofile), 1)
+  if(relative) {
+    # convert to relative saturation profile
+    relprofile <- igprofile/Mvals
+    # determine (approx) maximum relative saturation over entire dive
+    ymax <- max(max(relprofile), 1)
+  } else ymax <- max(max(igprofile))
 
   # precompute oxygen toxicity profile
   oxtoxprofile <- oxtox(d, progressive=TRUE)
@@ -210,27 +227,35 @@ showstates <- function(d, model="DSAT") {
     ind  <- max(which(timepoints <= tim))
     ind1 <- min(which(timepoints >= tim))
     hal <- halprofile[ind,,] 
-    ig  <- igprofile[ind,] 
-    rel <- as.numeric(relprofile[ind, ])
+    ig  <- igprofile[ind,]
+    if(relative) 
+      rel <- as.numeric(relprofile[ind, ])
     otu <- oxtoxprofile[ind]
 
     depths <- depths.dive(d)
     if(ind < ind1) {
-      # interpolate
+      # interpolate using correct equations
       t0 <- timepoints[ind]
       t1 <- timepoints[ind1]
       divebit <- chop.dive(dive.segment(d, ind), t0, tim)
       hal <- haldane(divebit, model, prevstate=hal)
       ig <- apply(hal, 1, sum)
-      M0. <- M0mix(model, d$data$fN2[ind], d$data$fHe[ind])
-      rel <- as.numeric(ig/M0.)
+      if(relative) {
+        M. <- if(!deco) M0mix(model, d$data$fN2[ind], d$data$fHe[ind]) else
+           Mmix(model, depths[ind], d$data$fN2[ind], d$data$fHe[ind]) 
+        rel <- as.numeric(ig/M.)
+      }
+      otu <- otu + oxtox(divebit)
     }
-    pozzie <- barplot(rel,
+    ylab <- if(!relative) "Tissue saturation (ata)" else
+            if(!deco) "Relative saturation (for surfacing)" else
+            "Relative saturation (at depth)" 
+    pozzie <- barplot(if(relative) rel else ig,
                       xlab=paste("Tissues (", y$title, ")", sep=""),
-                      ylab="Relative saturation",
+                      ylab=ylab,
                       main=paste("Time=", round(tim), "min\n",
                         "Accumulated oxygen toxicity", round(otu, 1)),
-                      ylim=range(c(0, 1.1 * maxrelsat)),
+                      ylim=range(c(0, 1.1 * ymax)),
                       names.arg=NULL)
     if(ntissues > 1) {
       mtext(side=1, at=pozzie[1], line=1, text="Fast")

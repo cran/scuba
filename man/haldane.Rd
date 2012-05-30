@@ -10,7 +10,8 @@
 	 model=pickmodel("DSAT"),
 	 prevstate=NULL,
          progressive=FALSE,
-         relative=FALSE)
+         relative=FALSE,
+         deco=FALSE)
 }
 \arguments{
   \item{d}{
@@ -32,11 +33,24 @@
     only the final tissue saturation at the end of the dive is computed.
   }
   \item{relative}{
-    Logical flag. If \code{TRUE}, the tissue saturation for each
-    compartment is expressed as a fraction of the surfacing M-value
-    for the compartment. If \code{FALSE} (the default),
+    Logical flag indicating whether to compute relative tissue
+    saturations. If \code{FALSE} (the default),
     tissue saturations are expressed as absolute pressures in
-    atmospheres absolute (ata).
+    atmospheres absolute (ata). If \code{TRUE}, the tissue saturation for each
+    compartment is expressed as a fraction of the surfacing M-value
+    for the compartment. (Alternatively if \code{deco=TRUE} then tissue
+    saturation is expressed as a fraction of the M-value at current depth.)
+  }
+  \item{deco}{
+    Logical flag indicating whether to calculate relative saturations
+    for a decompression dive.
+    If \code{deco=FALSE}, then relative tissue saturations
+    are computed by dividing the absolute tissue saturation by the
+    surfacing M-value, as appropriate for a no-decompression dive.
+    If \code{deco=TRUE}, then relative tissue saturations are computed
+    by dividing the absolute tissue saturation by the M-value at the
+    current depth, as appropriate for a decompression dive.
+    This argument applies only when \code{relative=TRUE}.
   }
 }
 \value{
@@ -63,7 +77,9 @@
   dive. Entries in the vector correspond to tissue compartments.
   The entries are relative gas tensions, that is,
   the total inert gas (Nitrogen plus Helium) tissue saturation
-  divided by the surfacing M-value for that compartment.
+  divided by the appropriate M-value for that compartment: either
+  the surfacing M-value (if \code{deco=FALSE}) or the
+  M-value at current depth (if \code{deco=TRUE}).
 
   If \code{relative=TRUE} and \code{progressive=TRUE},
   a matrix giving the diver's relative saturation
@@ -72,7 +88,9 @@
   during the dive. Columns correspond to the tissue compartments.
   The entries are relative gas tensions, that is,
   the total inert gas (Nitrogen plus Helium) tissue saturation
-  divided by the surfacing M-value for that compartment.
+  divided by the appropriate M-value for that compartment: either
+  the surfacing M-value (if \code{deco=FALSE}) or the
+  M-value at current depth (if \code{deco=TRUE}).
 }
 \details{
   This command computes a diver's nitrogen saturation 
@@ -116,9 +134,9 @@
 \section{Warnings}{
   Not applicable to altitude dives. Not suitable for dive planning.
 
-  No constraints of any kind are checked. In particular the
-  M-values of the model are not used, so it is not guaranteed that the
-  model accepts the dive profile as a no-decompression dive.
+  No constraints of any kind are checked. In particular
+  it is not guaranteed that the model accepts the dive profile
+  as a no-decompression dive.
 }
 \seealso{
   \code{\link{dive}},
