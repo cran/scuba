@@ -1,7 +1,7 @@
 #
 # 	hm.R
 #
-#	$Revision: 1.19 $	$Date: 2012/05/30 02:16:35 $
+#	$Revision: 1.21 $	$Date: 2013/11/22 09:25:23 $
 #
 ################################################################
 #
@@ -17,7 +17,7 @@ hm <- local({
                  He = NULL,
                  title="user-defined model",
                  cnames=NULL,
-                 mixrule="N2") {
+                 mixrule=NULL) {
     if(length(list(...)) > 0)
       warning("Some unrecognised arguments were ignored")
     
@@ -30,13 +30,12 @@ hm <- local({
         stop("Data for He and N2 have different numbers of compartments")
       pars <- append(pars, list(He = He))
     }
-
+    
     out <- list(title=title, pars=pars)
-  
-    mixtable <- c("interpolate", "N2")
-    if(is.na(m <- pmatch(mixrule, mixtable)))
-      stop(paste("Unrecognised option", dQuote(mixrule), "for mixrule"))
-    out$mixrule <- mixtable[m]
+
+    if(is.null(mixrule)) 
+      mixrule <- if(is.null(He)) "N2" else "interpolate"
+    out$mixrule <- match.arg(mixrule, c("N2", "interpolate"))
 
     class(out) <- c("hm", class(out))
     return(out)
@@ -128,7 +127,8 @@ print.summary.hm <- function(x, ...) {
          cat("Halftimes and Surfacing M-values\n"),
          cat("Halftimes and M-values for any depth\n"))
   }
-  cat(paste("Rule for generating M-values of mixed gases:", x$mixrule, "\n"))
+  cat(paste("Rule for generating M-values of mixed gases:",
+            sQuote(x$mixrule), "\n"))
   print(x$df, ...)
   return(invisible(NULL))
 }
@@ -188,9 +188,21 @@ param <- function(model, species="N2", what="HalfT") {
 
 # compute surfacing M-value for a mixture of inert gases
 
-M0mix <- function(model, fN2, fHe) {
-  stopifnot(inherits(model, "hm"))
-  mixrule <- summary(model)$mixrule
+M0mix <- function(model, fN2, fHe, mixrule=NULL) {
+  if(is.character(model)) model <- pickmodel(model)
+  if(!inherits(model, "hm")) 
+    stop(paste("model must be an object of class \'hm\'",
+               "or a string giving the name of a Haldane model"))
+  if(is.null(mixrule))
+    mixrule <- summary(model)$mixrule
+  if(is.gas(g <- fN2)) {
+    fN2 <- g$fN2
+    fHe <- g$fHe
+  }
+  # ensure compatible lengths
+  df <- data.frame(fN2 = fN2, fHe=fHe)
+  fN2 <- df$fN2
+  fHe <- df$fHe
   ntimes <- length(fN2)
   M0.N2 <- param(model, "N2", "M0")
   one <- rep(1, ntimes)
@@ -221,19 +233,32 @@ M0mix <- function(model, fN2, fHe) {
            b <- outer(z, bN2, "*") + outer(1-z, bHe, "*")
            # convert back to M0
            M0 <- a + 1/b
-         }
+         },
+         stop("Unrecognised mixture rule")
          )
   return(M0)
 }
 
 # compute M-value at depth for a mixture of inert gases
 
-Mmix <- function(model, depth, fN2, fHe) {
-  stopifnot(inherits(model, "hm"))
+Mmix <- function(model, depth, fN2, fHe, mixrule=NULL) {
+  if(is.character(model)) model <- pickmodel(model)
+  if(!inherits(model, "hm")) 
+    stop(paste("model must be an object of class \'hm\'",
+               "or a string giving the name of a Haldane model"))
   if(!capable(model, "N2", "dM"))
     stop("Model does not provide M-value gradients (dM) for Nitrogen")
-  mixrule <- summary(model)$mixrule
-  stopifnot(length(depth) == length(fN2))
+  if(is.null(mixrule))
+    mixrule <- summary(model)$mixrule
+  if(is.gas(g <- fN2)) {
+    fN2 <- g$fN2
+    fHe <- g$fHe
+  }
+  # ensure all lengths are the same
+  df <- data.frame(depth=depth, fN2=fN2, fHe=fHe)
+  depth <- df$depth
+  fN2   <- df$fN2
+  fHe   <- df$fHe
   ntimes <- length(depth)
   M0.N2 <- param(model, "N2", "M0")
   dM.N2 <- param(model, "N2", "dM")
@@ -267,9 +292,10 @@ Mmix <- function(model, depth, fN2, fHe) {
            a <- outer(z, aN2, "*") + outer(1-z, aHe, "*")
            b <- outer(z, bN2, "*") + outer(1-z, bHe, "*")
            # compute M in Buehlmann form
-           extraPmat <- matrix(extraP, length(extraP), ncol(b))
-           M <- a + extraPmat/b
-         }
+           Pmat <- matrix(1 + extraP, length(extraP), ncol(b))
+           M <- a + Pmat/b
+         },
+         stop("Unrecognised mixture rule")
          )
   return(M)
 }

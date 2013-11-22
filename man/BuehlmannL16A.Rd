@@ -6,6 +6,9 @@
   developed by Buehlmann.
 }
 \details{
+  This dataset contains the \emph{tissue parameters} of the
+  decompression model ZH-L16A.
+  
   Buehlmann's decompression model ZH-L16A is a pure
   diffusion (Haldane-type) model consisting of 17 tissue compartments.
   Nitrogen in the breathing gas diffuses in and out of each compartment
@@ -18,13 +21,33 @@
   Thus, for a no-decompression dive at sea level, the nitrogen tension
   in each compartment must not exceed the value \eqn{a + 1/b} for
   that compartment.
+
+  The dataset \code{BuehlmannL16A} is a table giving the values of
+  \eqn{a} and \eqn{b} for each of the 17 tissue compartments.
+}
+\section{Decompression calculations}{
+  The dataset \code{BuehlmannL16A} is just a table of numbers.
+  It cannot be used directly for decompression calculations,
+  because the \pkg{scuba} package does not recognise it
+  as a decompression model (object of class \code{"hm"}).
+
+  To perform decompression calculations with the ZH-L16A model,
+  use the functions \code{\link{haldane}} or \code{\link{showstates}}
+  with the argument \code{model="ZH-L16A"} (or just \code{model="Z"}).
+  
+  To convert a table of
+  \eqn{a} and \eqn{b} values, such as the table above,
+  into an object of class \code{"hm"} representing a decompression model,
+  first calculate the M-values \code{M0 = a + 1/b} and \code{dM = 1/b},
+  and then pass the values \code{M0}, \code{dM} to the function
+  \code{\link{hm}}.
 }
 \format{
   A data frame giving the following parameters for each compartment:
   \tabular{ll}{
     \code{id} \tab compartment name (1, 1b, 2, \dots, 16) \cr
     \code{halftime} \tab Nitrogen halftime (minutes) \cr
-    \code{a} \tab parameter \eqn{a} in ata (atmospheres absolute) \cr
+    \code{a} \tab parameter \eqn{a} in \code{ata} (atmospheres absolute) \cr
     \code{b} \tab parameter \eqn{b} (dimensionless)
   }
 }
@@ -40,7 +63,7 @@
   \code{\link{Workman65}}
 }
 \author{Adrian Baddeley
-  \email{Adrian.Baddeley@csiro.au}
+  \email{Adrian.Baddeley@uwa.edu.au}
   \url{http://www.maths.uwa.edu.au/~adrian/}
 }
 \keyword{datasets}

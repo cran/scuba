@@ -73,13 +73,13 @@ bestdoubledive(d1, d2, surface = 30, verbose = FALSE, model = "D", asdive=TRUE)
   in each case of the algorithm. 
 }
 \references{
-  Baddeley, A. and Bassom, A.P. (2012)
+  Baddeley, A. and Bassom, A.P. (2011)
   Classical theory of decompression and the design of scuba diving tables.
-  To appear in \emph{The Mathematical Scientist}.
+  \emph{The Mathematical Scientist} \bold{36}, 75-88.
 }
 \author{
   Adrian Baddeley
-  \email{Adrian.Baddeley@csiro.au}
+  \email{Adrian.Baddeley@uwa.edu.au}
   \url{http://www.maths.uwa.edu.au/~adrian/}
 }
 \seealso{
@@ -93,6 +93,8 @@ bestdoubledive(d1, d2, surface = 30, verbose = FALSE, model = "D", asdive=TRUE)
    plot(d)
    # Table 3 in Baddeley and Bassom (2012)
    bestdoubledive(40, 12, 15, verbose=TRUE)
+   # Brief description of optimal dive
+   summary(bestdoubledive(40, 12, 15))
    # Data for optimal dive
    bestdoubledive(40, 12, 15, asdive=FALSE)
 }

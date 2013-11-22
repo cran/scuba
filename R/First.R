@@ -10,9 +10,10 @@
   msg <- paste("scuba", v,
                "\nType", sQuote("help(scuba)"),
                "for an introduction",
-               "\nRead the warnings in", sQuote("help(scuba.disclaimer)"))
+               "\nRead the warnings in", sQuote("help(scuba.disclaimer)"),
+               "\nFor news about changes to the package, type",
+               sQuote("news(package=\'scuba\')"))
   packageStartupMessage(msg)
   invisible(NULL)
 }
 
-  

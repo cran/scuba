@@ -1,0 +1,46 @@
+
+	CHANGES IN scuba VERSION 1.6-0
+
+NEW FUNCTIONS
+
+  o ppO2
+  Calculates oxygen partial pressure.
+
+  o Mmix, M0mix
+  Calculate maximum tolerated inert gas tensions (M-values)
+  for a mixture of inert gases.
+
+NEW DATASETS
+
+   o deepmine
+   Dive profile for a long, extremely deep, decompression dive, 
+   using mixed gases, in a flooded mine. 
+   
+SIGNIFICANT USER-VISIBLE CHANGES
+
+   o datasets
+   All datasets are now lazy-loaded, so it is no longer necessary
+   to type 'data(pedro)', etc.
+
+   o hm
+   Changed default for 'mixrule' to something more sensible.
+   Improved documentation for 'mixrule'.
+
+   o dive
+   Now allows begin=NA to suppress assumption that the diver
+   descends from the surface at the beginning of dive;
+   and allows end=NA to suppress assumption that the diver
+   ascends to the surface at the end of dive.
+
+   o introductory vignette
+   Improved text.
+
+BUG FIXES
+
+   o haldane
+   There was a bug in the calculation of M-values at depth
+   (not surfacing M-values). Consequently the results of 
+   'haldane(relative=TRUE, deco=TRUE)' were wildly incorrect. 
+   [Spotted by Peter Buzzacott.]
+   Fixed.
+

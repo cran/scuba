@@ -6,9 +6,13 @@
 }
 \usage{
   \method{plot}{dive}(x, \dots, main=deparse(substitute(x)),
-                        text.gases=TRUE, text.cex=1,
+                        key.gases=c("text", "legend", "none"),
+                        text.cex=1,
                         text.verticals=TRUE,
-                        col.gases=1:length(tanklist(x)))
+                        col.gases=1:length(tanklist(x)),
+                        legendpos=c("top","bottom", "left", "right",
+                        "topleft", "topright", "bottomleft", "bottomright",
+                        "center"))
 }
 \arguments{
   \item{x}{
@@ -21,12 +25,12 @@
   \item{main}{
     Overall label for plot. 
   }
-  \item{text.gases}{
-    Logical flag indicating whether the plot should be annotated with labels
-    indicating what gas is breathed.
+  \item{key.gases}{
+    String indicating whether the plot should be annotated with labels
+    indicating what gas is breathed, and how to do the annotation.
   }
   \item{text.cex}{
-    Numeric value controlling the size of text when \code{text.gases=TRUE}.
+    Numeric value controlling the size of text when \code{key.gases="text"}.
   }
   \item{text.verticals}{
     Logical flag indicating whether the plot should
@@ -37,6 +41,10 @@
     Colours to be used to represent each of the breathing gases
     used in the dive. Either a numeric vector of colour codes,
     or a vector of character strings identifying colours.
+  }
+  \item{legendpos}{
+    Character string determining the position of the
+    legend, when \code{key.gases="legend"}. Default is \code{"top"}.
   }
 }
 \value{
@@ -62,7 +70,7 @@
   plot(d4, main="Baron Gautsch dive")
 }
 \author{Adrian Baddeley
-  \email{Adrian.Baddeley@csiro.au}
+  \email{Adrian.Baddeley@uwa.edu.au}
   \url{http://www.maths.uwa.edu.au/~adrian/}
 }
 \keyword{utilities}

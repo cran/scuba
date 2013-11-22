@@ -60,6 +60,7 @@
   gas mixtures other than nitrox (oxygen-nitrogen mixtures).
 }
 \seealso{
+  \code{\link{ppO2}},
   \code{\link{ead}},  \code{\link{eadtable}},
   \code{\link{mod}},
   \code{\link{maxmix}}
@@ -74,7 +75,7 @@
   oxtox(d)
 }
 \author{Adrian Baddeley
-  \email{Adrian.Baddeley@csiro.au}
+  \email{Adrian.Baddeley@uwa.edu.au}
   \url{http://www.maths.uwa.edu.au/~adrian/}
 }
 \keyword{utilities}

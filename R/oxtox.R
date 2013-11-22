@@ -1,7 +1,7 @@
 #
 # 	oxtox.R
 #
-#	$Revision: 1.3 $	$Date: 2008/06/20 20:26:03 $
+#	$Revision: 1.4 $	$Date: 2013/08/14 10:09:47 $
 #
 ###################################################################
 #  
@@ -45,6 +45,14 @@ function(g, ppO2max=1.4) {
   EAD <- ifelse(EAD >= 0, as.character(EAD), " ")
   EAD <- ifelse(depth > mod(fO2, ppO2max), "Warning", EAD)
   data.frame(depth=depth,EAD=EAD)
+}
+
+ppO2 <- function(d) {
+  times <- times.dive(d)
+  depths <- depths.dive(d)
+  fO2 <- d$data$fO2
+  pp <- fO2 * (depths/10 + 1)
+  data.frame(time=times, ppO2=pp)
 }
 
 "oxtox" <- 

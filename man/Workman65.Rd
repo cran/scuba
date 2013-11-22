@@ -47,7 +47,7 @@
   \code{\link{BuehlmannL16A}}
 }
 \author{Adrian Baddeley
-  \email{Adrian.Baddeley@csiro.au}
+  \email{Adrian.Baddeley@uwa.edu.au}
   \url{http://www.maths.uwa.edu.au/~adrian/}
 }
 \keyword{datasets}

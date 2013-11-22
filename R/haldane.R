@@ -167,9 +167,11 @@ function(d,
 #  Interactive display
 #
 
-showstates <- function(d, model="DSAT", relative=TRUE, deco=FALSE) {
+showstates <- function(d, model="DSAT", relative=TRUE, deco=FALSE, ...) {
   dname <- deparse(substitute(d))
   stopifnot(is.dive(d))
+  main <- list(...)$main
+  if(is.null(main)) main <- dname
 
   # pick model by its name
   if(is.character(model))
@@ -184,7 +186,7 @@ showstates <- function(d, model="DSAT", relative=TRUE, deco=FALSE) {
 
   oldpar <- par(mfrow=c(1,2), ask=FALSE)
   frame()
-  plot(d, main=dname)
+  plot(d, ..., main=main)
   timepoints <- times.dive(d)
   maxtime <- max(timepoints)
   ntissues <- y$nc

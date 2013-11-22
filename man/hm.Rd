@@ -10,7 +10,7 @@
                He = NULL,
                title="user-defined model",
                cnames=NULL,
-               mixrule="N2") 
+               mixrule=NULL) 
 }
 \arguments{
   \item{HalfT}{
@@ -47,6 +47,8 @@
   }
   \item{mixrule}{
     Mixing rule for M-values.
+    Either \code{"N2"}, \code{"interpolate"}, or \code{NULL}
+    (representing a sensible default). 
   }
 }
 \value{
@@ -82,7 +84,39 @@
   components \code{halfT}, \code{M0} and \code{dM}, specifying the
   Helium halftimes, maximum surfacing Helium tensions, and
   Helium gradients, respectively.
+
+  If Helium parameters are included, so that diving with
+  \emph{trimix} (Oxygen/Nitrogen/Helium mixture) is permitted,
+  then the model must also specify a rule for combining the
+  parameters for Helium and Nitrogen to obtain the parameters
+  for any trimix gas. This rule is specified by the argument \code{mixrule}.
+  Current options are:
+  \describe{
+    \item{\code{"N2"}}{
+      Ignore the Helium parameters; pretend that Helium is Nitrogen.
+      Combine Nitrogen and Helium into a single inert gas,
+      and take the parameters \code{M0}, \code{dM} for this gas
+      to be the parameters \code{M0}, \code{dM} for Nitrogen.
+    }
+    \item{\code{"interpolate"}}{
+      Apply Buehlmann's (1983, 2002) interpolation rule. Convert the
+      parameters \code{M0}, \code{dM} to the Buehlmann parameters
+      \code{a = M0 - dM} and \code{b = 1/dM}. For a mixture of
+      Nitrogen and Helium, calculate the \code{a,b} values by
+      linear interpolation between the values for Nitrogen and Helium
+      according to the gas fractions. Then convert from \code{a,b}
+      back to \code{M0, dM}.
+    }
+  }
+  The default is \code{mixrule="interpolate"} whenever the Helium
+  parameters are specified.
   
+  Note that this mixture calculation applies only to the saturation
+  parameters \code{M0}, \code{dM} which tell us whether a dive is
+  staying within the no-decompression limits. This mixture calculation
+  does not affect the Haldane calculations of the gas tensions in the
+  diver's body.
+
   The class \code{"hm"} has methods for \code{print} and
   \code{as.data.frame}.
 }
@@ -132,7 +166,7 @@
      He=list(HalfT=c(5,10,30), M0=c(1,1,1), dM=c(1,1,1)))
 }
 \author{Adrian Baddeley
-  \email{Adrian.Baddeley@csiro.au}
+  \email{Adrian.Baddeley@uwa.edu.au}
   \url{http://www.maths.uwa.edu.au/~adrian/}
 }
 \keyword{utilities}

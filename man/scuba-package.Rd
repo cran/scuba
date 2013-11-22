@@ -102,9 +102,9 @@
   \code{\link{baron}} for an example of how to convert a data frame
   to a \code{"dive"} object.
 
-  The package also provides 11 real dive profiles that have already been
+  The package also provides 12 real dive profiles that have already been
   converted to \code{"dive"} objects.
-  See the help file for \code{\link{pedro}}.
+  See the help files for \code{\link{pedro}} and \code{\link{deepmine}}.
 }
 \section{Decompression Calculations}{
   The \pkg{scuba} package performs the mathematical calculations of
@@ -170,6 +170,9 @@
   The total oxygen toxicity incurred during a dive can be computed
   by \code{\link{oxtox}}.
 
+  Oxygen partial pressure at each stage of a dive is computed
+  by \code{\link{ppO2}}.
+  
   Bubble theory calculations are not yet implemented.
 }
 \section{Nitrox and trimix}{
@@ -213,6 +216,8 @@
 
   The total oxygen toxicity incurred during a nitrox or trimix dive
   can be computed by \code{\link{oxtox}}.
+  Oxygen partial pressure at each stage of a dive is computed
+  by \code{\link{ppO2}}.
 }
 \section{Diving on different gases}{
   Every \code{"dive"} object contains information
@@ -331,12 +336,12 @@
   General Public License", a copy of which is distributed with the package.
 }
 \references{
-  Baddeley, A. (2011) \emph{Introduction to the scuba package}.
+  Baddeley, A. (2013) \emph{Introduction to the scuba package}.
   Vignette accompanying this package.
   
-  Baddeley, A. and Bassom, A.P. (2012)
+  Baddeley, A. and Bassom, A.P. (2011)
   Classical theory of decompression and the design of scuba diving tables.
-  To appear in \emph{The Mathematical Scientist}.
+  \emph{The Mathematical Scientist} \bold{36}, 75-88.
   
   Bookspan, J. (1995) Diving physiology in plain English.
   Undersea and Hyperbaric Medicine Society, Kensington, Maryland (USA).
@@ -372,7 +377,7 @@
 }
 \author{
   Adrian Baddeley
-  \email{Adrian.Baddeley@csiro.au}
+  \email{Adrian.Baddeley@uwa.edu.au}
   \url{http://www.maths.uwa.edu.au/~adrian/}
   with contributions from Vittorio Broglio
   and Pedro Antonio Neves.

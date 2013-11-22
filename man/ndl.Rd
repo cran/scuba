@@ -78,7 +78,7 @@ ndl(depth, g=air, prevstate=NULL, model = "DSAT")
   is reached).
 }
 \author{Adrian Baddeley
-  \email{Adrian.Baddeley@csiro.au}
+  \email{Adrian.Baddeley@uwa.edu.au}
   \url{http://www.maths.uwa.edu.au/~adrian/}
 }
 \seealso{

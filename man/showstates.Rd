@@ -6,7 +6,7 @@
   saturation state at any intermediate stage indicated by the mouse.
 }
 \usage{
- showstates(d, model="DSAT", relative=TRUE, deco=FALSE)
+ showstates(d, model="DSAT", relative=TRUE, deco=FALSE, ...)
 }
 \arguments{
   \item{d}{
@@ -36,6 +36,10 @@
     by dividing the absolute tissue saturation by the M-value at the
     current depth, as appropriate for a decompression dive.
     This argument applies only when \code{relative=TRUE}.
+  }
+  \item{\dots}{
+    Arguments passed to \code{\link{plot.dive}} to control the plot
+    of the dive profile.
   }
 }
 \value{
@@ -75,7 +79,7 @@
   }
 }
 \author{Adrian Baddeley
-  \email{Adrian.Baddeley@csiro.au}
+  \email{Adrian.Baddeley@uwa.edu.au}
   \url{http://www.maths.uwa.edu.au/~adrian/}
 }
 \keyword{utilities}

@@ -1,7 +1,7 @@
 #
 # 	dive.R
 #
-#	$Revision: 1.25 $	$Date: 2008/10/31 05:51:55 $
+#	$Revision: 1.27 $	$Date: 2013/08/14 08:01:56 $
 #
 ###################################################################
 #  
@@ -16,13 +16,16 @@
 #                 ascending to 5 metres, switching to EANx 50,
 #                 5@5 then surfacing.
 #
+
 dive <- function(..., begin=0, end=0, tanklist=NULL) {
   X <- list(...)
   if(length(X) == 0)
     stop("No dive profile supplied")
-  
-  stopifnot(is.numeric(begin) && length(begin) == 1)
-  stopifnot(is.numeric(end) && length(end) == 1)
+
+  if(!is.na(begin))
+    stopifnot(is.numeric(begin) && length(begin) == 1)
+  if(!is.na(end))
+    stopifnot(is.numeric(end) && length(end) == 1)
 
   tanks.given <- !is.null(tanklist)
   gases.given <- tanks.given || any(unlist(lapply(X, is.gas)))
@@ -95,9 +98,13 @@ dive <- function(..., begin=0, end=0, tanklist=NULL) {
       if(length(Y) > 2)
         stop("Vector of length > 2 is not a recognised format")
       newdepth <- Y[1]
-      # First ascend or descend to this depth (making new waypoint)
-      if(newdepth != state$depth) {
-        duration <- timetaken(state$depth, newdepth, rate.up, rate.down)
+      currentdepth <- state$depth
+      if(is.na(currentdepth)) {
+        # re-initialise depth
+        state <- change(state, depth=newdepth)
+      } else if(newdepth != currentdepth) {
+        # Ascend or descend to this new depth (making new waypoint)
+        duration <- timetaken(currentdepth, newdepth, rate.up, rate.down)
         state <- change(state, duration, newdepth)
         df <- rbind(df, state)
         now <- now + 1
@@ -154,17 +161,23 @@ dive <- function(..., begin=0, end=0, tanklist=NULL) {
       if(!is.null(tanklist))
         newdf <- cbind(newdf, tankid=state$tankid)
 
-      if(newdepths[1] != state$depth) {
-        # First ascend/descend to starting depth (on current gas)
-        duration <- timetaken(state$depth, newdepths[1], rate.up, rate.down)
-        newdf$time <- newdf$time + duration
-      } else if(newtimes[1] == state$time) {
+      currentdepth <- state$depth
+      if(is.na(currentdepth)) {
+        # dive not yet started: take X as dive data
+        df <- newdf
+      } else {
+        # dive already started - transition to X
+        if(newdepths[1] != currentdepth) {
+          # First ascend/descend to starting depth (on current gas)
+          duration <- timetaken(currentdepth, newdepths[1], rate.up, rate.down)
+          newdf$time <- newdf$time + duration
+        } else if(newtimes[1] == state$time) {
           # last row of df duplicates first row of newdf
           df <- df[-now, ]
-      }         
-
-      # tack on the data frame
-      df <- rbind(df, newdf)
+        }         
+        # tack on the data frame
+        df <- rbind(df, newdf)
+      }
       now <- nrow(df)
       state <- df[now, ]
       
@@ -252,7 +265,7 @@ dive <- function(..., begin=0, end=0, tanklist=NULL) {
   }
   # End of loop - all arguments examined.
   #
-  if(state$depth != end) {
+  if(!is.na(end) && state$depth != end) {
     # Don't forget to surface.. (or whatever)
     duration <- timetaken(state$depth, end, rate.up, rate.down)
     state <- change(state, duration, end)
@@ -390,14 +403,20 @@ whichtank <- function(d) {
 
 plot.dive <- function(x, ...,
                       main=deparse(substitute(x)),
-                      text.gases=TRUE, text.cex=1,
+                      key.gases=c("text", "legend", "none"),
+                      text.cex=1,
                       text.verticals=TRUE,
-                      col.gases=1:length(tanklist(x)))
+                      col.gases=1:length(tanklist(x)),
+                      legendpos=c("top","bottom", "left", "right",
+                        "topleft", "topright", "bottomleft", "bottomright",
+                        "center"))
  {
+  legendpos <- match.arg(legendpos)
   times <- times.dive(x)
   depths <- depths.dive(x)
-  if(mean(diff(times)) <= 1 && missing(text.gases))
-    text.gases <- FALSE
+  if(mean(diff(times)) <= 1 && missing(key.gases)) {
+    key.gases <- "legend"
+  } else key.gases <- match.arg(key.gases)
 
   # create plot 
   add <- resolve.defaults(list(...), list(add=FALSE))$add
@@ -438,20 +457,27 @@ plot.dive <- function(x, ...,
                                 lwd=2)))
 
   # annotate
-  if(text.gases && !x$airdive) {
-    labels <- with(x$data, gasnames(fO2, fN2, fHe))[-nrow(x$data)]
-    rates <- abs(diff(depths)/diff(times))
-    aspect <- diff(range(depths))/diff(range(times))
-    vertical <- (rates > 2 * aspect)
-    n <- length(times)
-    midx <- (times[-n] + times[-1])/2
-    midy <- -x$profile(midx)
-    text(midx[!vertical],  midy[!vertical], labels[!vertical],
-         pos=3, cex=text.cex)
-    if(text.verticals)
-      text(midx[vertical], midy[vertical], labels[vertical],
-           srt=90, cex=text.cex)
-  }
+  if(!x$airdive) 
+    switch(key.gases,
+           none = {},
+           legend = {
+             ug <- summary(x)$uniquegases
+             legend(legendpos, lty=1, col=col.gases, legend=ug)
+           },
+           text = {
+             labels <- with(x$data, gasnames(fO2, fN2, fHe))[-nrow(x$data)]
+             rates <- abs(diff(depths)/diff(times))
+             aspect <- diff(range(depths))/diff(range(times))
+             vertical <- (rates > 2 * aspect)
+             n <- length(times)
+             midx <- (times[-n] + times[-1])/2
+             midy <- -x$profile(midx)
+             text(midx[!vertical],  midy[!vertical], labels[!vertical],
+                  pos=3, cex=text.cex)
+             if(text.verticals)
+               text(midx[vertical], midy[vertical], labels[vertical],
+                    srt=90, pos=4, offset=1, cex=text.cex)
+           })
   invisible(NULL)
 }
 
@@ -513,20 +539,36 @@ summary.dive <- function(object, ...) {
   stages <- data.frame(depth=(depths[-n])[flat],
                        time=durations[flat],
                        gas=(gases[-n])[flat])
+  ugases <-
+    if(object$airdive) "air" else
+    if(!object$tanks.given) unique(gases) else 
+    paste(names(object$tanklist),
+          ":",
+          unlist(lapply(object$tanklist, as.character)))
+
+  # could be a double dive, etc
+  ndives <- with(stages, 1 + sum(depth == 0))
+  
   z <- list(depths=depths,
             times=times,
             totaltime=totaltime,
             stages=stages,
+            ndives=ndives,
             maxdepth=max(depths),
             meandepth=meandepth,
             airdive=object$airdive,
-            gasnames=gases)
+            gasnames=gases,
+            uniquegases=ugases)
   class(z) <- c("summary.dive", class(z))
   return(z)
 }
   
 print.summary.dive <- function(x, ...) {
-  cat(paste("Dive to", x$maxdepth, "metres"))
+  descrip <- switch(x$ndives,
+                    '1' = "Dive to",
+                    '2' = "Double dive to maximum depth",
+                    paste("Sequence of", x$ndives, "dives to maximum depth"))
+  cat(paste(descrip, x$maxdepth, "metres"))
   if(x$airdive)
     cat(" on air\n")
   else {

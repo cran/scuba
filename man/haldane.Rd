@@ -142,7 +142,9 @@
   \code{\link{dive}},
   \code{\link{oxtox}},
   \code{\link{pickmodel}},
-  \code{\link{showstates}}
+  \code{\link{showstates}},
+  \code{\link{Mmix}},
+  \code{\link{M0mix}}.
 }
 \references{
   Bookspan, J. (1995) Diving physiology in plain English.
@@ -200,7 +202,7 @@
   s10 <- haldane(chop.dive(d1, 0, 10))
 }
 \author{Adrian Baddeley
-  \email{Adrian.Baddeley@csiro.au}
+  \email{Adrian.Baddeley@uwa.edu.au}
   \url{http://www.maths.uwa.edu.au/~adrian/}
 }
 \keyword{utilities}

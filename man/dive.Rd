@@ -16,7 +16,8 @@
   }
   \item{begin, end}{
     The depths at the start and finish of the dive (normally zero
-    indicating that the dive starts and finishes at the surface).
+    indicating that the dive starts and finishes at the surface)
+    or \code{NA}.
   }
   \item{tanklist}{
     Optional list of the gases contained in each tank,
@@ -34,7 +35,7 @@
   the graph of depth against time is a broken straight line. 
   Dives are assumed to start and finish at the surface.
 
-  The arguments \code{...} specify a succession of events
+  The arguments \code{\dots} specify a succession of events
   that make up the dive. Each argument can be
   \describe{
     \item{a vector of length 2}{
@@ -74,14 +75,17 @@
       or an integer vector containing elapsed times in \bold{seconds},
       or a vector of class \code{\link{difftime}}
       representing elapsed times in any time unit.
+      In this case you probably want to set the arguments
+      \code{begin=NA} and \code{end=NA}.
     }
     \item{an object of class \code{"dive"}}{
       representing a dive profile. This allows the user to paste
       dive profiles together.
     }
   }
-  Dives are assumed to start and finish at the surface (this can be changed
-  by specifying values for \code{begin} and \code{end}).
+  Dives are assumed to start and finish at the surface. This can be changed
+  by specifying values for \code{begin} and \code{end}. See the
+  section on Start and End of Dive.
 
   Initially the descent rate is set to 30 metres per minute,
   the ascent rate is 18 metres per minute, and the breathing gas is
@@ -98,16 +102,50 @@
   computed using \code{\link{haldane}} and the
   cumulative oxygen toxicity using \code{\link{oxtox}}.
 }
+\section{Start and End of Dive}{
+  To make it easy to specify simple dive profiles,
+  the algorithm fills in some information.
+  If the diving depths specified in the arguments \code{\dots} do not
+  start at the surface (depth zero), then by default, the algorithm
+  assumes that the dive did start at the surface, and it
+  adds an extra dive segment at the beginning of the dive.
+  The diver is assumed to descend from the surface, at the standard
+  descent rate, to the first depth specified.
+  Thus \code{dive(c(10,25))} means that the diver will first descend
+  from the surface to 10 metres at a rate of 30 metres per minute,
+  remain there for 25 minutes, then ascend to the surface
+  at a rate of 18 metres per minute.
+
+  To change this behaviour, set a different value for the argument \code{begin}.
+  If the dive really started at a nonzero depth, e.g. a dry habitat at 3 metres,
+  set \code{begin=3}. If one of the arguments \code{\dots} is a
+  data frame uploaded from a dive computer, then set \code{begin=NA},
+  so that that the dive will start at the first depth
+  specified in this data frame.
+  
+  Similarly, if the last depth specified by the arguments \code{\dots}
+  is a depth below the surface (depth greater than zero), then by
+  default the diver is assumed to ascend from this last depth to
+  the surface, at the standard ascent rate. To suppress this altogether,
+  set \code{end=NA}. To specify a different final depth for the dive,
+  set a different value for \code{end}.
+}
 \section{Modifying a dive object}{
   The depths and elapsed times at each waypoint during the dive
   can be extracted and changed using \code{\link{depths.dive}}
   and \code{\link{times.dive}}. 
 
+  Dives can be cut into pieces using \code{\link{chop.dive}}
+  and pasted together using \code{dive}.
+  
   It is possible to alter the \emph{breathing gases} used in a dive \code{d},
   yielding a new dive object. 
-  You simply modify the tanklist using \code{\link{tanklist}(d) <- value}. 
   This makes it possible to study the effect of conducting the same
-  dive profile with a different breathing gas.
+  dive profile with different breathing gases.
+  You can change the specification of the breathing gas (or gases) by
+  \code{\link{tanklist}(d) <- value}.
+  In a multiple-tank dive you can change the periods when each tank was used,
+  by \code{\link{whichtank}(d) <- value}.
 }
 \section{Warnings}{
   Not suitable for representing altitude dives. 
@@ -122,7 +160,8 @@
   \code{\link{durations.dive}},
   \code{\link{depths.dive}},
   \code{\link{chop.dive}},
-  \code{\link{tanklist}}.
+  \code{\link{tanklist}},
+  \code{\link{whichtank}}.
 }
 \examples{
   # Dive to 25 m for 20 min followed by safety stop at 5 metres for 3 min
@@ -143,6 +182,7 @@
   data(baron)
   pro <- baron[, 1:2]
   d <- dive(pro)
+  d <- dive(pro, begin=NA, end=NA)
   plot(d)
 
   # GAS USE
@@ -171,7 +211,7 @@
 
 }
 \author{Adrian Baddeley
-  \email{Adrian.Baddeley@csiro.au}
+  \email{Adrian.Baddeley@uwa.edu.au}
   \url{http://www.maths.uwa.edu.au/~adrian/}
 }
 \keyword{utilities}
