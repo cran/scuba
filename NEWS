@@ -1,4 +1,30 @@
 
+	CHANGES IN scuba VERSION 1.7-0
+
+NEW FUNCTIONS
+
+  o deco.ceiling
+  Calculate decompression ceiling
+
+  o END
+  Equivalent Narcotic Depth, for trimix gases.
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+  o haldane
+  Calculation is now much faster 
+  (by a factor of 500 for a typical real dive profile).
+
+  o haldane
+  New argument 'derived' allows extra quantities to be calculated
+  such as the washout and the decompression ceiling.
+
+BUG FIXES
+
+  o showstates
+  Additional arguments "..." were ignored after the first mouse click.
+  Fixed.
+
 	CHANGES IN scuba VERSION 1.6-0
 
 NEW FUNCTIONS

@@ -1,5 +1,6 @@
 \name{Workman65}
 \alias{Workman65}
+\docType{data}
 \title{Decompression model of Workman 1965}
 \description{
   The parameters of the decompression model

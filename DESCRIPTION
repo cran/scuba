@@ -1,6 +1,6 @@
 Package: scuba
-Version: 1.6-0
-Date: 2013-11-22
+Version: 1.7-0
+Date: 2013-12-15
 Title: Scuba diving calculations and decompression models
 Author: Adrian Baddeley <Adrian.Baddeley@uwa.edu.au>
         with contributions from Vittorio Broglio,
@@ -11,8 +11,7 @@ Description: dive profiles, decompression models and gas calculations
 	for scuba diving
 License: GPL (>= 2)
 LazyData: true
-LazyLoad: true
-Packaged: 2013-11-22 10:17:07 UTC; adrian
-NeedsCompilation: no
+NeedsCompilation: yes
+Packaged: 2013-12-15 10:35:41 UTC; adrian
 Repository: CRAN
-Date/Publication: 2013-11-22 11:23:21
+Date/Publication: 2013-12-15 12:04:02

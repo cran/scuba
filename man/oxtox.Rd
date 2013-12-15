@@ -3,10 +3,10 @@
 \title{Pulmonary Oxygen Toxicity}
 \description{
   Computes pulmonary oxygen toxicity dose for a given
-  dive profile and breathing gas (air or nitrox).
+  dive profile and breathing gas.
 }
 \usage{
-  oxtox(d, progressive=FALSE)
+  oxtox(d, progressive=FALSE, warn=TRUE)
 }
 \arguments{
   \item{d}{
@@ -16,6 +16,11 @@
     Logical flag. If \code{FALSE}, the total oxygen toxicity from the
     dive is calculated. If \code{TRUE}, the cumulative oxygen toxicity
     at each time point during the dive is calculated.
+  }
+  \item{warn}{
+    Logical flag indicating whether to issue a warning
+    if the partial pressure of oxygen exceeds
+    a threshold (1.4, 1.5 or 1.6 ata).
   }
 }
 \value{
@@ -56,8 +61,7 @@
   Best Publishing Co.
 }
 \section{Warnings}{
-  Not applicable to altitude dives. Not applicable to
-  gas mixtures other than nitrox (oxygen-nitrogen mixtures).
+  Not applicable to altitude dives. 
 }
 \seealso{
   \code{\link{ppO2}},

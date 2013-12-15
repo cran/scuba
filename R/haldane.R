@@ -1,7 +1,7 @@
 #
 # 	haldane.R
 #
-#	$Revision: 1.29 $	$Date: 2012/05/30 03:10:23 $
+#	$Revision: 1.33 $	$Date: 2013/12/10 11:39:04 $
 #
 ####################################################################
 #
@@ -20,6 +20,7 @@ saturated.state <- function(model="D", depth=0, g=air) {
   out <- list(N2= rep(Pamb * g$fN2, y$nc), He=rep(Pamb * g$fHe, y$nc))
   out <- out[y$species]
   out <- as.data.frame(out)
+  row.names(out) <- summary(model)[["cnames"]]
   return(out)
 }
 
@@ -30,13 +31,11 @@ conform <- function(state, model="D") {
   stopifnot(inherits(model, "hm"))
   m <- summary(model)
   mgas <- m$species
-  if(is.numeric(state) && is.vector(state))
-    s <- data.frame(N2=state)
-  else if(is.list(state)) 
-    s <- as.data.frame(state)
-  else if(is.matrix(state) || is.data.frame(state))
-    s <- state
-  else
+  s <-
+    if(is.numeric(state) && is.vector(state)) data.frame(N2=state) else
+    if(is.list(state)) as.data.frame(state) else
+    if(is.data.frame(state)) state else
+    if(is.matrix(state)) as.data.frame(state) else 
     stop("Unrecognised format for state")
   sgas <- colnames(s)
   if(is.null(sgas)) {
@@ -52,6 +51,8 @@ conform <- function(state, model="D") {
   }
   if(nrow(s) != m$nc)
     stop("numbers of compartments in state do not match compartments in model")
+  # attach names of compartments
+  row.names(s) <- m[["cnames"]]
   return(s)
 }
 
@@ -61,7 +62,8 @@ function(d,
 	 prevstate=NULL,
          progressive=FALSE,
          relative=FALSE,
-         deco=FALSE) 
+         deco=FALSE,
+         derived=FALSE) 
 {
   stopifnot(is.dive(d))
 
@@ -106,61 +108,121 @@ function(d,
   ratecoefs <- log(2)/HalfT
 
   ncomp <- nrow(state)
-  
+
   # data frame: time x species
-  fGas <- with(d$data, list(N2=fN2, He=fHe))
-  fGas <- as.data.frame(fGas[species])
+  fGasList <- with(d$data, list(N2=fN2, He=fHe))
+  fGas <- as.data.frame(fGasList[species])
+  ngas <- ncol(fGas)
 
-  if(progressive) {
-    profile <- array(0, dim=c(n, dim(state)))
-    profile[1,,] <- as.matrix(state)
-  }
-
-  for(i in 1:(n-1)) {
-    d0 <- depths[i]
-    d1 <- depths[i+1]
-    tim <- durations[i]
-    if(tim > 0) {
-      fgi <- as.numeric(fGas[i,])
-      k1 <- fgi * (d0/10 + 1)
-      k2 <- fgi * ((d1-d0)/10) / tim
-      k1 <- outer(rep(1, ncomp), k1, "*")
-      k2 <- outer(rep(1, ncomp), k2, "*")
-      v <- exp(- ratecoefs * tim)
-      state <- state * v + ((k1 - k2/ratecoefs) * (1 - v) + k2 * tim)
+  # allocate space for result
+  
+  # ......... core calculation ...................................
+  useC <- !identical(options("HaldaneC")[[1]], FALSE)
+  if(useC) {
+    # use C code
+    pressures <- 1 + depths/10
+    profile <- if(progressive) numeric(n * ncomp * ngas) else numeric(1)
+    final <- numeric(n * ncomp * ngas)
+    z <- .C("HaldaneCalc",
+            ntimes   = as.integer(n),
+            ntissues = as.integer(ncomp),
+            ngases   = as.integer(ngas), 
+            initial  = as.double(as.matrix(state)),
+            pressures = as.double(pressures),
+            durations = as.double(durations),
+            gasfractions = as.double(as.matrix(fGas)),
+            ratecoefs = as.double(as.matrix(ratecoefs)),
+            progressive = as.integer(progressive),
+            profile = as.double(profile),
+            final = as.double(final)
+            )
+    state <- as.data.frame(matrix(z$final,
+                                  nrow=nrow(state), ncol=ncol(state),
+                                  dimnames=dimnames(state)))
+    if(progressive) 
+      profile <- array(z$profile, dim=c(n, dim(state)),
+                       dimnames = append(list(NULL), dimnames(state)))
+  } else {
+    # interpreted code
+    if(progressive) {
+      profile <- array(0, dim=c(n, dim(state)))
+      dimnames(profile) <- append(list(NULL), dimnames(state))
+      profile[1,,] <- as.matrix(state)
     }
-    if(progressive)
-      profile[i+1,,] <- as.matrix(state)
+    for(i in 1:(n-1)) {
+      d0 <- depths[i]
+      d1 <- depths[i+1]
+      tim <- durations[i]
+      if(tim > 0) {
+        fgi <- as.numeric(fGas[i,])
+        k1 <- fgi * (d0/10 + 1)
+        k2 <- fgi * ((d1-d0)/10) / tim
+        k1 <- outer(rep(1, ncomp), k1, "*")
+        k2 <- outer(rep(1, ncomp), k2, "*")
+        v <- exp(- ratecoefs * tim)
+        state <- state * v + ((k1 - k2/ratecoefs) * (1 - v) + k2 * tim)
+      }
+      if(progressive)
+        profile[i+1,,] <- as.matrix(state)
+    }
   }
   
   rownames(state) <- rownames(model)
   colnames(state) <- species
 
+  if(derived) {
+    # calculate derived quantities
+    fGasAll <- as.matrix(as.data.frame(fGasList))
+    if(!progressive) {
+      # inspired gas partial pressure at end of dive
+      ffGas <- matrix(fGasAll[n,], nrow=nrow(state), byrow=TRUE)
+      dimnames(ffGas) <- dimnames(state)
+      ppGas <- ffGas * (1+depths[n]/10)
+      # washout at surface
+      washout <- state - ppGas
+      # decompression ceiling
+      Pceiling <- deco.ceiling(profile, model, "pressure")
+      Dceiling <- deco.ceiling(profile, model, "depth")
+    } else {
+      # inspired gas partial pressures (time x compartment x species)
+      ffGas <- array(fGasAll, dim=c(n, rev(dim(state))))
+      ffGas <- aperm(ffGas, c(1, 3, 2))
+      dimnames(ffGas) <- dimnames(profile)
+      ppGas <- ffGas * (1 + depths/10)
+      # washout 
+      washout <- profile - ppGas
+      # decompression ceiling
+      Pceiling <- deco.ceiling(profile, model, "pressure")
+      Dceiling <- deco.ceiling(profile, model, "depth")
+    }
+    derivedstuff <- list(washout=washout,
+                         Pceiling=Pceiling,
+                         Dceiling=Dceiling)
+  }
+
   if(!relative) {
     # absolute saturations
-    if(progressive)
-      return(profile)
-    else 
-      return(state)
-  }
-
-  # relative saturations
-  fN2 <- d$data$fN2
-  fHe <- d$data$fHe
-  if(progressive) {
-    Mvals <- if(!deco) M0mix(model,fN2,fHe) else Mmix(model,depths,fN2,fHe) 
-    igprofile <- apply(profile, c(1,2), sum) 
-    relprofile <- igprofile/Mvals
-    return(relprofile)
+    result <- if(progressive) profile else state
   } else {
-    Mvals <- if(!deco) M0mix(model, fN2[n], fHe[n]) else
-                       Mmix(model, depths[n], fN2[n], fHe[n])    
-    igstate <- apply(state, 1, sum)
-    relstate <- igstate/as.vector(Mvals)
-    return(relstate)
+    # relative saturations
+    fN2 <- d$data$fN2
+    fHe <- d$data$fHe
+    if(!progressive) {
+      Mvals <- if(!deco) M0mix(model, fN2[n], fHe[n]) else
+      Mmix(model, depths[n], fN2[n], fHe[n])    
+      igstate <- apply(state, 1, sum)
+      result <- relstate <- igstate/as.vector(Mvals)
+    } else {
+      Mvals <- if(!deco) M0mix(model,fN2,fHe) else Mmix(model,depths,fN2,fHe) 
+      igprofile <- apply(profile, c(1,2), sum) 
+      result <- relprofile <- igprofile/Mvals
+    }
   }
-}
 
+  if(derived)
+    attr(result, "derived") <- derivedstuff
+  return(result)
+}
 
 ###################################################################
 #
@@ -247,7 +309,7 @@ showstates <- function(d, model="DSAT", relative=TRUE, deco=FALSE, ...) {
            Mmix(model, depths[ind], d$data$fN2[ind], d$data$fHe[ind]) 
         rel <- as.numeric(ig/M.)
       }
-      otu <- otu + oxtox(divebit)
+      otu <- otu + oxtox(divebit, warn=FALSE)
     }
     ylab <- if(!relative) "Tissue saturation (ata)" else
             if(!deco) "Relative saturation (for surfacing)" else
@@ -264,7 +326,7 @@ showstates <- function(d, model="DSAT", relative=TRUE, deco=FALSE, ...) {
       mtext(side=1, at=pozzie[ntissues], line=1, text="Slow")
     }
     abline(h=1, lty=3, col="red")
-    plot(d, main=dname)
+    plot(d, ..., main=dname)
     abline(v=tim, lty=2, col="green")
   }
   par(oldpar)

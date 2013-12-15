@@ -1,7 +1,7 @@
 #
 # 	hm.R
 #
-#	$Revision: 1.21 $	$Date: 2013/11/22 09:25:23 $
+#	$Revision: 1.24 $	$Date: 2013/12/09 06:00:43 $
 #
 ################################################################
 #
@@ -298,6 +298,79 @@ Mmix <- function(model, depth, fN2, fHe, mixrule=NULL) {
          stop("Unrecognised mixture rule")
          )
   return(M)
+}
+
+deco.ceiling <- function(state, model, what=c("depth", "pressure")) {
+  what <- match.arg(what)
+  if(is.character(model)) model <- pickmodel(model)
+  if(!inherits(model, "hm")) 
+    stop(paste("model must be an object of class \'hm\'",
+               "or a string giving the name of a Haldane model"))
+  sm <- summary(model)
+  ncomp <- sm[["nc"]]
+  compnames <- sm[["cnames"]]
+  if(is.vector(state) && length(state) == ncomp) {
+    # assume state contains N2 tensions at a single time point
+    if(!capable(model, "N2", "dM"))
+      stop("Model does not allow calculation of decompression ceiling")
+    species <- "N2"
+    profile <- array(state, dim=c(1, ncomp, 1))
+    dimnames(profile) <- list(NULL, compnames, "N2")
+  } else if((is.matrix(state) || is.data.frame(state))
+            && nrow(state) == ncomp) {
+    state <- as.matrix(state)
+    if(ncol(state) > length(sm[["species"]]))
+      stop("Format of state is not understood")
+    # match columns to gases
+    cn <- colnames(state)
+    if(length(cn) == ncol(state) && all(nzchar(cn))) {
+      m <- match(cn, sm[["species"]])
+      if(any(is.na(m)))
+        stop("Unrecognised names of gases")
+      state <- state[,m]
+      species <- colnames(state)
+    } else {
+      species <- sm[["species"]][1:ncol(state)]
+      colnames(state) <- species
+    }
+    profile <- array(state, dim=c(1,dim(state)),
+                     dimnames=append(list(NULL), dimnames(state)))
+  } else if(is.array(state) && dim(state)[2] == ncomp) {
+    nplanes <- dim(state)[3]
+    if(nplanes > length(sm$species))
+      stop("Format of state is not understood")
+    # match planes to gases
+    pn <- dimnames(state)[[3]]
+    if(length(pn) == nplanes && all(nzchar(pn))) {
+      m <- match(pn, sm$species)
+      if(any(is.na(m)))
+        stop("Unrecognised names of gases")
+      state <- state[,,m,drop=FALSE]
+      species <- dimnames(state)[[3]][m]
+    } else {
+      species <- sm$species[1:nplanes]
+      dimnames(state)[[3]] <- species
+    }
+    profile <- state
+  } else stop("Format of state is not understood")
+
+  result <- array(, dim=dim(profile), dimnames=dimnames(profile))
+  ntimes <- dim(profile)[1]
+  
+  for(g in species) {
+    if(!capable(model, g, "dM"))
+      stop("Model does not allow calculation of decompression ceiling")
+    tensions <- profile[ , , g]
+    M0 <- param(model, g, "M0")
+    dM <- param(model, g, "dM")
+    M0 <- matrix(M0, nrow=ntimes, ncol=ncomp, byrow=TRUE)
+    dM <- matrix(dM, nrow=ntimes, ncol=ncomp, byrow=TRUE)
+    Pambtol <- pmax(0, (tensions - M0)/dM + 1)
+    result[,,g] <- switch(what,
+                          pressure = Pambtol,
+                          depth = pmax(0, (Pambtol - 1) * 10))
+  }
+  return(result[,,,drop=TRUE])
 }
 
   

@@ -1,5 +1,6 @@
 \name{BuehlmannL16A}
 \alias{BuehlmannL16A}
+\docType{data}
 \title{Decompression model ZH-L16A}
 \description{
   The parameters of the decompression model ZH-L16A

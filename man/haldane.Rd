@@ -11,7 +11,8 @@
 	 prevstate=NULL,
          progressive=FALSE,
          relative=FALSE,
-         deco=FALSE)
+         deco=FALSE,
+         derived=FALSE)
 }
 \arguments{
   \item{d}{
@@ -52,6 +53,10 @@
     current depth, as appropriate for a decompression dive.
     This argument applies only when \code{relative=TRUE}.
   }
+  \item{derived}{
+    Logical flag indicating whether to calculate additional quantities
+    such as the decompression ceiling.
+  }
 }
 \value{
   If \code{relative=FALSE} and \code{progressive=FALSE}, a data frame giving
@@ -91,6 +96,15 @@
   divided by the appropriate M-value for that compartment: either
   the surfacing M-value (if \code{deco=FALSE}) or the
   M-value at current depth (if \code{deco=TRUE}).
+
+  If \code{derived=TRUE} then additional quantities are
+  returned as an \code{attribute}
+  of the result. This is extracted by: \code{attr(result, "derived")}.
+  It is a list containing the components
+  \code{Dceiling} (depth ceiling), 
+  \code{Pceiling} (pressure ceiling)
+  and \code{washout} (washout), each of which
+  is a vector, matrix or array of the same format as the result.
 }
 \details{
   This command computes a diver's nitrogen saturation 
@@ -124,6 +138,20 @@
   waypoint during the dive. The corresponding times
   (extracted by \code{\link{times.dive}(d)})
   are \emph{not equally spaced} over time.
+
+  If \code{derived=TRUE} then additional quantities are
+  computed including the washout (the difference
+  between the current tissue tension of inert gas
+  and the partial pressure of inert gas in the breathing gas),
+  the decompression ceiling depth (minimum tolerable diving depth)
+  and decompression ceiling pressure (minimum tolerable
+  ambient pressure). These quantities are returned as an \code{attribute}
+  of the result: \code{attr(result, "derived")}.
+  This is a list containing the components
+  \code{Dceiling} (depth ceiling), 
+  \code{Pceiling} (pressure ceiling)
+  and \code{washout} (washout), each of which
+  is a vector, matrix or array of the same format as the result.
 
   To compute the tissue saturation
   at an arbitrary instant of time during the dive, \code{tim}, use
@@ -200,6 +228,43 @@
 
   # Inspect saturation during dive d1 at time 10 minutes
   s10 <- haldane(chop.dive(d1, 0, 10))
+
+  # Progressive saturation during dive
+  # A real dive
+  plot(deepmine, col=1, key.gases="none")
+  # compute saturations during dive
+  hmine <- haldane(deepmine, model="Z", progressive=TRUE)
+  # show N2 saturations during dive
+  # Image plot
+  image(x=times.dive(deepmine), y=1:17, z=hmine[,,"N2"],
+      xlab="Time (min)", ylab="Compartment", axes=FALSE)
+  axis(1)
+  axis(2, at=1:17, labels=dimnames(hmine)[[2]])
+  # Perspective plot
+  persp(x=times.dive(deepmine), y=1:17, z=hmine[,,"N2"],
+      xlab="Time (min)", ylab="Compartment", zlab="Saturation (atm)",
+      col="green3", shade=0.6, border=NA,
+      theta=20, phi=30, ltheta=120, lphi=20)
+       
+  #....  Derived quantities .....
+  hmine <- haldane(deepmine, model="Z", progressive=TRUE, derived=TRUE)
+  der <- attr(hmine, "derived")
+  names(der)
+
+  # Decompression ceiling depth (time x compartment x gas)
+  dcd <- der$Dceiling
+  # Overall decompression ceiling at each time point
+  dc <- apply(dcd, 1, max)
+
+  # plot dive with deco ceiling
+  plot(deepmine, key.gases="none", col=1)
+  lines(times.dive(deepmine), -dc, lty=3, lwd=2)
+  legend(100, -60, lty=c(1,3), lwd=2,
+      legend=c("dive profile", "deco ceiling"))
+
+  # Nitrogen washout for tissue 1b (positive values indicate off-gassing)
+  plot(times.dive(deepmine), der$washout[,"1b", "N2"],
+        type="l", xlab="Time (min)", ylab="Washout")
 }
 \author{Adrian Baddeley
   \email{Adrian.Baddeley@uwa.edu.au}

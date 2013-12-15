@@ -1,5 +1,6 @@
 \name{deepmine}
 \alias{deepmine}
+\docType{data}
 \title{
   Extremely Deep Decompression Dive
 }

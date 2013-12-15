@@ -1,4 +1,5 @@
 \name{pedro}
+\docType{data}
 \alias{pedro}
 \alias{pedro902}
 \alias{pedro903}

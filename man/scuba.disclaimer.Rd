@@ -1,5 +1,5 @@
 \name{scuba.disclaimer}
-\alias{scuba.disclaimer}
+\alias{scuba.disclaimer} %DoNotExport
 \title{
   Disclaimer for Scuba Library
 }

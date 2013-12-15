@@ -1,7 +1,7 @@
 #
 # 	oxtox.R
 #
-#	$Revision: 1.4 $	$Date: 2013/08/14 10:09:47 $
+#	$Revision: 1.5 $	$Date: 2013/12/10 12:58:54 $
 #
 ###################################################################
 #  
@@ -13,9 +13,16 @@ function(depth, g) {
   if(!is.gas(g))
     g <- nitrox(g)
   if(!is.nitrox(g))
-    stop("Not yet implemented for trimix")
+    stop("Not defined for trimix")
   fO2 <- g$fO2
   (10 + depth) * (1- fO2)/0.79 - 10
+}
+
+"END" <-
+function(depth, g) {
+  stopifnot(is.gas(g))
+  fHe <- g$fHe
+  pmax(0, (10 + depth) * (1- fHe) - 10)
 }
 
 "maxmix" <-
@@ -56,7 +63,7 @@ ppO2 <- function(d) {
 }
 
 "oxtox" <- 
-function(d, progressive=FALSE)
+function(d, progressive=FALSE, warn=TRUE)
 {
   times <- times.dive(d)
   depths <- depths.dive(d)
@@ -68,13 +75,15 @@ function(d, progressive=FALSE)
   pO2end   <- c(fO2[-n] * (depths[-1]/10 + 1), NA)
   pO2high  <- pmax(pO2start, pO2end, na.rm=TRUE)
   maxpO2 <- max(pO2high)
-  if(maxpO2 > 1.6)
-    warning("O2 partial pressure exceeded 1.6")
-  else if(maxpO2 > 1.5)
-    warning("O2 partial pressure exceeded 1.5")
-  else if(maxpO2 > 1.4)
-    warning("O2 partial pressure exceeded 1.4")
-
+  if(warn) {
+    if(maxpO2 > 1.6)
+      warning("O2 partial pressure exceeded 1.6")
+    else if(maxpO2 > 1.5)
+      warning("O2 partial pressure exceeded 1.5")
+    else if(maxpO2 > 1.4)
+      warning("O2 partial pressure exceeded 1.4")
+  }
+  
   # determine which intervals contain toxicity contributions
   toxicstart <- (pO2start > 0.5)
   toxicend   <- (pO2end   > 0.5)

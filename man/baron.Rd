@@ -1,5 +1,6 @@
 \name{baron}
 \alias{baron}
+\docType{data}
 \title{
   Real Scuba Dive Profile 
 }

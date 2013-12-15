@@ -14,7 +14,7 @@
 \newcommand{\code}[1]{\texttt{#1}}
 
 \begin{document}
-%\bibliographystyle{plain}
+\bibliographystyle{plain}
 \thispagestyle{empty}
 
 <<echo=FALSE,results=hide>>=
@@ -25,7 +25,7 @@ sversion <- read.dcf(file = system.file("DESCRIPTION", package = "scuba"),
 
 \title{Introduction to the \texttt{scuba} package}
 \author{Adrian Baddeley}
-\date{Package version \texttt{\Sexpr{sversion}}\\ Last edited November 2013}
+\date{Package version \texttt{\Sexpr{sversion}}\\ Last edited December 2013}
 \maketitle
 
 
@@ -39,9 +39,9 @@ about scuba diving. The package supports
 \item gas toxicity calculations.
 \end{itemize}
 
-Section~\ref{S:tour} gives a quick tour of the package's functionality.
-Section~\ref{S:start} explains how to install and run the package.
-Section~\ref{S:disclaim} is a legal disclaimer.
+Section \ref{S:tour} gives a quick tour of the package's functionality.
+Section \ref{S:start} explains how to install and run the package.
+Section \ref{S:disclaim} is a legal disclaimer.
 Then the remaining sections \ref{S:diveprof}--\ref{S:tech}
 explain the package commands in greater detail.
 
@@ -49,7 +49,7 @@ explain the package commands in greater detail.
 \label{S:tour}
 
 A \emph{dive profile} gives the diver's depth as a function of elapsed
-time during a scuba dive. See Figure~\ref{F:dives}. 
+time during a scuba dive. See Figure \ref{F:dives}. 
 
 \SweaveOpts{width=10,height=4}
 \setkeys{Gin}{width=\textwidth}
@@ -61,7 +61,7 @@ opa <- par(mfrow=c(1,2))
 d1 <- dive(c(20,20), c(5,5))
 data(pedro)
 plot(d1, main="", lwd=4)
-plot(pedro950, main="", col.gases=1)
+plot(pedro950, main="")
 par(opa)
 @   
   \caption{Examples of dive profiles. 
@@ -106,7 +106,7 @@ haldane(d)
 
 The output gives the nitrogen tension (in atmospheres) 
 in each of the 8 tissue compartments of the PADI DSAT model,
-at the end of the dive. 
+at the end of the dive. (Other compartment models can be used.)
 
 The command \texttt{showstates(d)} displays an interactive graphical 
 window. When the user clicks on a point in the dive profile, the
@@ -157,7 +157,8 @@ persp(times.dive(pedro902), 1:8, hald902,
 
 The theoretical No Decompression Limit
 (maximum duration of a no-decompression dive to a specified depth) 
-can be computed by the command \texttt{ndl}. For a dive to 24 metres:
+can be computed by the command \texttt{ndl}. For a dive to 24 metres
+on air:
 
 <<>>=
 ndl(24)
@@ -176,7 +177,21 @@ nitrox(0.32)
 nitrox(1)
 @ 
 
-Standard nitrox calculations are available, for example
+You can specify the breathing gas when calculating the NDL.
+For a dive to 24 metres on Nitrox 32,
+
+<<>>=
+ndl(24, nitrox(0.32))
+@ 
+
+or:
+
+<<>>=
+g <- nitrox(0.32)
+ndl(24, g)
+@ 
+
+Standard nitrox and trimix calculations are available, for example
 to compute the equivalent air depth, maximum operating depth,
 and richest nitrox mix for a given depth. To find the maximum
 operating depth for EAN 32:
@@ -221,7 +236,7 @@ would have affected nitrogen saturation, helium saturation and oxygen toxicity.
 
 To use the \pkg{scuba} package, you will first need to 
 install the \R\ system on your computer, and then 
-install the \pkg{scuba} package within \R (follow
+install the \pkg{scuba} package within \R\ (follow
 the installation instructions at \texttt{r-project.org}). 
 
 With all the software installed, 
@@ -290,7 +305,7 @@ In the rest of this document, we will go through the features of
 the \pkg{scuba} package in more detail.
 
 A \emph{dive profile} gives the diver's depth as a function of elapsed
-time during a scuba dive. See Figure~\ref{F:dives}. This section explains
+time during a scuba dive. See Figure \ref{F:dives}. This section explains
 how to create and manipulate dive profiles in the \pkg{scuba}
 package.
 
@@ -342,8 +357,9 @@ To create a dive plan or a synthetic dive profile,
 use the function \texttt{dive}, typing in the depths of each waypoint
 and the duration of time between each successive waypoint.
 
-The function \texttt{dive} interprets its arguments
-as a sequence of actions or events occurring during the dive.
+The function \texttt{dive} 
+\emph{interprets its arguments as a sequence of actions}
+or events occurring during the dive.
 If an argument is a vector of length 2, it is interpreted
 as \texttt{c(depth,time)} specifying the depth and duration
 of a stage of the dive. If the argument is a single number,
@@ -584,6 +600,8 @@ durations.dive(d)[2] <- 25
 @ 
 
 means that the diver now spends 25 minutes at the bottom instead of 20 minutes.
+This has the side-effect of changing the
+sequence of elapsed times \texttt{times.dive(d)}.
 
 To extract only part of a dive profile, use \texttt{chop.dive}:
 <<>>=
@@ -600,8 +618,6 @@ in the dive \texttt{pedro902}.
 
 <<fig=TRUE>>=
 data(pedro)
-tim <- times.dive(pedro902)
-dep <- depths.dive(pedro902)
 plot(pedro902)
 @ 
 
@@ -610,11 +626,15 @@ the safety stop should be inserted. This is the last time at which
 the diver is deeper than 9 metres:
 
 <<>>=
+tim <- times.dive(pedro902)
+dep <- depths.dive(pedro902)
 t9 <- max(tim[dep >= 9])
 t9
 @ 
 
-Cut the dive into two pieces:
+The answer is \Sexpr{t9} minutes.
+
+We cut the dive into two pieces:
 
 <<>>=
 before <- chop.dive(pedro902, 0, t9)
@@ -651,7 +671,8 @@ decompression theory:
 \end{itemize}
 
 These calculations are based on the classical theory of
-decompression originated by Haldane (Boycott et al, 1908).
+decompression originated by Haldane \cite{boycdamahald08,hald22};
+for a modern account, see \cite{tikvgert03}.
 
 Bubble theory calculations are not yet implemented.
 
@@ -696,11 +717,13 @@ in the USN model.
 \subsection{Double no-decompression dives}
 
 The ``best'' double no-decompression dive to specified depths
-can be computed by \texttt{bestdoubledive}.
+can be computed by \texttt{bestdoubledive}. This performs the 
+calculations described in \cite{baddbass11}.
 
 <<>>=
 bestdoubledive(40, 12, 15)
 @ 
+
 
 The best double dive to 40 metres, followed by a surface interval of 
 15 minutes, followed by a dive to 12 metres, is to dive to 40 metres for
@@ -800,6 +823,13 @@ abline(v=35, lty=2, col="green")
 par(opa)
 @ 
 
+Using other options to the \texttt{haldane} command, it is possible to
+calculate quantities such as the depth ceiling (the shallowest permissible depth
+given the diver's tissue saturation), the pressure ceiling (the lowest
+permissible ambient pressure given the diver's tissue saturation)
+and the washout (difference between
+nitrogen saturation and inspired nitrogen partial pressure).
+
 \subsection{Oxygen partial pressure and oxygen toxicity}
 
 The partial pressure of oxygen at each stage during the dive can be
@@ -862,12 +892,13 @@ summary(nitrox(0.36))
 @ 
 
 \noindent 
-Standard nitrox calculations are also available: 
+Standard nitrox and trimix calculations are also available: 
 
 \begin{tabular}[l]{ll}
   \texttt{ead} & equivalent air depth\\
+  \texttt{END} & equivalent narcotic depth\\
   \texttt{mod} & maximum operating depth\\
-  \texttt{maxmix} & richest nitrox mix for a given depth
+  \texttt{maxmix} & richest nitrox mix for a given depth 
 \end{tabular}
 
 \noindent
@@ -886,10 +917,19 @@ mod(nitrox(0.36), 1.5)
 @ 
 
 \noindent
-To find the richest Nitrox mix for a dive to 40 metres
+To find the richest Nitrox mix for a dive to 40 metres,
 
 <<>>=
 maxmix(40, 1.5)
+@ 
+
+\noindent 
+To find the equivalent narcotic depth a dive to 40 metres on Trimix 18/50
+(i.e.\ the depth of a dive on compressed air that would
+have the same narcotic effect),
+
+<<>>=
+END(40, trimix(0.18,0.5))
 @ 
 
 \subsection{Diving on different gases}
@@ -1083,7 +1123,15 @@ can also be computed by \texttt{oxtox}.
 The package was written by Adrian Baddeley
 \verb!<Adrian.Baddeley@uwa.edu.au>!
 with generous contributions and feedback from Vittorio Broglio,
-Pedro Antonio Neves and Peter Buzzacott. 
-This package also incorporates results of joint research with Andrew Bassom.
+Pedro Antonio Neves, Peter Buzzacott and an anonymous diver.
+This package also incorporates results of joint research 
+with Andrew Bassom \cite{baddbass11}.
+
+In writing the package we relied heavily on the texts by
+B\"uhlmann \cite{bueh83,bueh02} and Bookspan \cite{book95}.
+An authoritative modern reference is \cite{bennelli5};
+in particular, see \cite{tikvgert03}.
+
+\bibliography{scuba,scubadd}
 
 \end{document}

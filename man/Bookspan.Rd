@@ -1,5 +1,6 @@
 \name{Bookspan}
 \alias{Bookspan}
+\docType{data}
 \title{Tissue data from Bookspan's book}
 \description{
   Data for several decompression models
