@@ -472,10 +472,12 @@ containing the depth (in metres) recorded at each time.
 The elapsed
 times can be either a vector of character strings
 in minutes-and-seconds format
-\texttt{mm:ss} or hours-minutes seconds \texttt{hh:mm:ss},
+\texttt{mm:ss} or hours-minutes-seconds \texttt{hh:mm:ss},
 or a vector of integer times measured in \emph{seconds}
 of elapsed time, or an object of class \texttt{difftime}
 containing the elapsed times in any time unit. 
+The elapsed times will be converted to minutes, for use
+in the \pkg{scuba} package.
 
 Continuing our example, the dataset \texttt{mydata} is
 already a data frame in \R, but it has too many columns:
@@ -559,7 +561,8 @@ or to consider the tissue saturation incurred by a particular
 segment of a dive.
 
 The commands \texttt{depths.dive} and \texttt{times.dive}
-extract the depths and elapsed times at each waypoint during the dive.
+extract the depths (in metres) and elapsed times (in minutes)
+at each waypoint during the dive.
 
 <<>>=
 d <- dive(c(30, 20), c(5, 3))
@@ -602,6 +605,7 @@ durations.dive(d)[2] <- 25
 means that the diver now spends 25 minutes at the bottom instead of 20 minutes.
 This has the side-effect of changing the
 sequence of elapsed times \texttt{times.dive(d)}.
+Note that times are stored in {\bf minutes}.
 
 To extract only part of a dive profile, use \texttt{chop.dive}:
 <<>>=
@@ -1102,6 +1106,39 @@ whichtank(d)[depths.dive(d) > 3] <- "travel"
 
 \noindent
 would select the travel gas for all parts of the dive deeper than 3 metres.
+
+To switch tanks at specific times, use \texttt{times.dive}
+instead of \texttt{depths.dive}:
+
+<<>>=
+b <- dive(baron[,1:2])
+tanklist(b) <- list(travel=air, deco=nitrox(0.36))
+whichtank(b) <- ifelse(times.dive(b) <= 32, "travel", "deco")
+@ 
+
+Note that {\bf elapsed times are always calculated in minutes} so the
+last line above says that the gas switch occurs after 32 minutes.
+
+If there is more than one change of gas it might be easier to use
+a series of commands:
+
+<<>>=
+tanklist(b) <- list(travel=air, deco=nitrox(0.32), rich=nitrox(0.5))
+whichtank(b) <- "travel"
+whichtank(b)[times.dive(b) > 32] <- "deco"
+whichtank(b)[times.dive(b) > 37] <- "rich"
+@ 
+
+It's also possible to use the \texttt{cut} command:
+
+<<>>=
+whichtank(b) <- cut(times.dive(b), breaks=c(0, 32, 37, Inf),
+                    include.lowest=TRUE, labels=c("travel", "deco", "rich"))
+@ 
+
+(note again that the times are in {\bf minutes})
+but this does not allow switching back to a previously-used gas
+(because labels are not allowed to be duplicated).
 
 \subsection{Decompression calculations}
 

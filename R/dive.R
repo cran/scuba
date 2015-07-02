@@ -1,7 +1,7 @@
 #
 # 	dive.R
 #
-#	$Revision: 1.27 $	$Date: 2013/08/14 08:01:56 $
+#	$Revision: 1.30 $	$Date: 2014/01/28 02:16:00 $
 #
 ###################################################################
 #  
@@ -130,7 +130,7 @@ dive <- function(..., begin=0, end=0, tanklist=NULL) {
         newtimes <- as.numeric(newtimes)
       } else if(is.numeric(newtimes)) {
         # assume seconds -- convert to minutes
-        message("Elapsed times are assumed to be given in seconds")
+        message("Elapsed times are assumed to be given in seconds (and are converted to minutes)")
         newtimes <- newtimes/60
       } else if(is.character(newtimes)) {
         # assume mm:ss format
@@ -366,8 +366,13 @@ whichtank <- function(d) {
   stopifnot(is.dive(d))
   DF <- d$data
   TL <- d$tanklist
+  ndf <- nrow(DF)
 
-  if(length(value) != length(DF$tankid))
+  checkcollapse <- TRUE
+  if(length(value) == 1) { 
+    value <- rep(value, ndf)
+    checkcollapse <- FALSE
+  } else if(length(value) != ndf) 
     stop("Replacement value has the wrong length")
 
   if(is.numeric(value)) {
@@ -391,6 +396,8 @@ whichtank <- function(d) {
       DF$tankid <- value
     } else stop("Unrecognised format for replacement value")
   }
+  if(checkcollapse && length(unique(DF$tankid)) == 1)
+    warning("Entire dive is conducted on a single tank")
   # update gas fractions
   DF <- reconcile.df(DF, TL)
   d$data <- DF
@@ -806,13 +813,35 @@ allspecies <- function(d, inert=TRUE) {
 }
 
 reconcile.df <- function(df, tanks) {
-  # Ensure gas fractions are correctly determined by tank id
-  for(i in 1:nrow(df)) {
-    id <- df$tankid[i]
-    g <- tanks[[id]]
-    df$fO2[i] <- g$fO2
-    df$fN2[i] <- g$fN2
-    df$fHe[i] <- g$fHe
+  ## Ensure gas fractions are correctly determined by tank id
+  tkid <- df$tankid
+  ntanks <- length(tanks)
+  if(is.numeric(tkid)) {
+    if(!all(unique(tkid) %in% seq_len(ntanks)))
+      stop("Tank numbers out-of-bounds")
+    for(k in seq_len(ntanks)) {
+      relevant <- (tkid == k)
+      if(any(relevant)) {
+        g <- tanks[[k]]
+        df$fO2[relevant] <- g$fO2
+        df$fN2[relevant] <- g$fN2
+        df$fHe[relevant] <- g$fHe
+      }
+    }
+  } else {
+    tkname <- as.factor(tkid)
+    nama <- names(tanks)
+    if(!all(levels(tkname) %in% nama))
+      stop("Tank names not recognised")
+    for(k in seq_len(ntanks)) {
+      relevant <- (tkname == nama[k])
+      if(any(relevant)) {
+        g <- tanks[[k]]
+        df$fO2[relevant] <- g$fO2
+        df$fN2[relevant] <- g$fN2
+        df$fHe[relevant] <- g$fHe
+      }
+    }
   }
   return(df)
 }

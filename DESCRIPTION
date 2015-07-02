@@ -1,17 +1,29 @@
 Package: scuba
-Version: 1.7-0
-Date: 2013-12-15
-Title: Scuba diving calculations and decompression models
-Author: Adrian Baddeley <Adrian.Baddeley@uwa.edu.au>
-        with contributions from Vittorio Broglio,
-        Pedro Antonio Neves, Andrew Bassom and Peter Buzzacott
+Version: 1.8-0
+Date: 2015-07-02
+Title: Diving Calculations and Decompression Models
+Authors@R: c(person("Adrian", "Baddeley", role = c("aut", "cre"),
+		     email = "Adrian.Baddeley@uwa.edu.au"),
+	      person("Vittorio", "Broglio", role = c("ctb","dtc")),
+	      person(c("Pedro", "Antonio"), "Neves", role = c("ctb", "dtc")),
+	      person("Andrew", "Bassom", role = "ctb"),
+	      person("Peter", "Buzzacott", role = "ctb"))
+Author: Adrian Baddeley [aut, cre],
+  Vittorio Broglio [ctb, dtc],
+  Pedro Antonio Neves [ctb, dtc],
+  Andrew Bassom [ctb],
+  Peter Buzzacott [ctb]
 Maintainer: Adrian Baddeley <Adrian.Baddeley@uwa.edu.au>
 Depends: R (>= 3.0.0)
-Description: dive profiles, decompression models and gas calculations
-	for scuba diving
+Imports: utils, graphics, stats
+Description: Code for describing and manipulating scuba diving profiles 
+	(depth-time curves) and decompression models, 
+        for calculating the predictions of decompression models,
+	for calculating maximum no-decompression time and decompression tables,
+	and for performing mixed gas calculations. 
 License: GPL (>= 2)
 LazyData: true
 NeedsCompilation: yes
-Packaged: 2013-12-15 10:35:41 UTC; adrian
+Packaged: 2015-07-02 11:32:17 UTC; adrian
 Repository: CRAN
-Date/Publication: 2013-12-15 12:04:02
+Date/Publication: 2015-07-02 16:07:25

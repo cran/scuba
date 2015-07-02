@@ -195,38 +195,38 @@ mydata <- baron
 
 
 ###################################################
-### code chunk number 28: intro.Rnw:483-484
+### code chunk number 28: intro.Rnw:485-486
 ###################################################
 head(mydata)
 
 
 ###################################################
-### code chunk number 29: intro.Rnw:490-491
+### code chunk number 29: intro.Rnw:492-493
 ###################################################
 mydf <- mydata[ , 1:2]
 
 
 ###################################################
-### code chunk number 30: intro.Rnw:496-498
+### code chunk number 30: intro.Rnw:498-500
 ###################################################
 head(mydf)
 is.character(mydf[,1])
 
 
 ###################################################
-### code chunk number 31: intro.Rnw:509-510
+### code chunk number 31: intro.Rnw:511-512
 ###################################################
 d <- dive(mydf)
 
 
 ###################################################
-### code chunk number 32: intro.Rnw:519-520
+### code chunk number 32: intro.Rnw:521-522
 ###################################################
 d <- dive(mydf, begin=NA, end=NA)
 
 
 ###################################################
-### code chunk number 33: intro.Rnw:528-531
+### code chunk number 33: intro.Rnw:530-533
 ###################################################
 data(baron)
 mydf <- baron[, 1:2]
@@ -234,14 +234,14 @@ baronprof <- dive(mydf[,1:2])
 
 
 ###################################################
-### code chunk number 34: intro.Rnw:543-545
+### code chunk number 34: intro.Rnw:545-547
 ###################################################
 data(pedro)
 plot(pedro902)
 
 
 ###################################################
-### code chunk number 35: intro.Rnw:564-567
+### code chunk number 35: intro.Rnw:567-570
 ###################################################
 d <- dive(c(30, 20), c(5, 3))
 depths.dive(d)
@@ -249,39 +249,39 @@ times.dive(d)
 
 
 ###################################################
-### code chunk number 36: intro.Rnw:576-578
+### code chunk number 36: intro.Rnw:579-581
 ###################################################
 depths.dive(d) <- c(0, 35, 35, 5, 5, 0)
 d
 
 
 ###################################################
-### code chunk number 37: intro.Rnw:584-585
+### code chunk number 37: intro.Rnw:587-588
 ###################################################
 depths.dive(d)[2:3] <- 35
 
 
 ###################################################
-### code chunk number 38: intro.Rnw:598-599
+### code chunk number 38: intro.Rnw:601-602
 ###################################################
 durations.dive(d)[2] <- 25
 
 
 ###################################################
-### code chunk number 39: intro.Rnw:607-608
+### code chunk number 39: intro.Rnw:611-612
 ###################################################
 chop.dive(d, 0, 10)
 
 
 ###################################################
-### code chunk number 40: intro.Rnw:619-621
+### code chunk number 40: intro.Rnw:623-625
 ###################################################
 data(pedro)
 plot(pedro902)
 
 
 ###################################################
-### code chunk number 41: intro.Rnw:628-632
+### code chunk number 41: intro.Rnw:632-636
 ###################################################
 tim <- times.dive(pedro902)
 dep <- depths.dive(pedro902)
@@ -290,53 +290,53 @@ t9
 
 
 ###################################################
-### code chunk number 42: intro.Rnw:639-641
+### code chunk number 42: intro.Rnw:643-645
 ###################################################
 before <- chop.dive(pedro902, 0, t9)
 after <- chop.dive(pedro902, t9)
 
 
 ###################################################
-### code chunk number 43: intro.Rnw:646-648
+### code chunk number 43: intro.Rnw:650-652
 ###################################################
 newdive <- dive(before, c(9, 5), after)
 plot(newdive)
 
 
 ###################################################
-### code chunk number 44: intro.Rnw:694-696
+### code chunk number 44: intro.Rnw:698-700
 ###################################################
 m <- pickmodel("USN")
 m
 
 
 ###################################################
-### code chunk number 45: intro.Rnw:709-710
+### code chunk number 45: intro.Rnw:713-714
 ###################################################
 ndl(30, model="USN")
 
 
 ###################################################
-### code chunk number 46: intro.Rnw:723-724
+### code chunk number 46: intro.Rnw:727-728
 ###################################################
 bestdoubledive(40, 12, 15)
 
 
 ###################################################
-### code chunk number 47: intro.Rnw:743-745
+### code chunk number 47: intro.Rnw:747-749
 ###################################################
 d <- dive(c(18,60), c(5,5))
 haldane(d)
 
 
 ###################################################
-### code chunk number 48: intro.Rnw:756-757
+### code chunk number 48: intro.Rnw:760-761
 ###################################################
 haldane(d, relative=TRUE)
 
 
 ###################################################
-### code chunk number 49: intro.Rnw:767-775 (eval = FALSE)
+### code chunk number 49: intro.Rnw:771-779 (eval = FALSE)
 ###################################################
 ## data(pedro)
 ## h <- haldane(pedro902, progressive=TRUE, relative=TRUE)
@@ -349,7 +349,7 @@ haldane(d, relative=TRUE)
 
 
 ###################################################
-### code chunk number 50: intro.Rnw:777-783
+### code chunk number 50: intro.Rnw:781-787
 ###################################################
 tim <- times.dive(pedro902)
 tiss <- row.names(as.data.frame(pickmodel("D")))
@@ -360,7 +360,7 @@ axis(2, at=1:ntiss, labels=tiss)
 
 
 ###################################################
-### code chunk number 51: intro.Rnw:789-792 (eval = FALSE)
+### code chunk number 51: intro.Rnw:793-796 (eval = FALSE)
 ###################################################
 ## persp(tim, 1:ntiss, h,
 ##       theta=-45, shade=0.5, col="yellow", border=NA,
@@ -368,7 +368,7 @@ axis(2, at=1:ntiss, labels=tiss)
 
 
 ###################################################
-### code chunk number 52: intro.Rnw:794-797
+### code chunk number 52: intro.Rnw:798-801
 ###################################################
 persp(tim, 1:ntiss, hald902,
       theta=-45, shade=0.5, col="yellow", border=NA,
@@ -376,7 +376,7 @@ persp(tim, 1:ntiss, hald902,
 
 
 ###################################################
-### code chunk number 53: intro.Rnw:809-823
+### code chunk number 53: intro.Rnw:813-827
 ###################################################
 opa <- par(mfrow=c(1,2))
 pozzie <- barplot(hald,
@@ -395,20 +395,20 @@ par(opa)
 
 
 ###################################################
-### code chunk number 54: intro.Rnw:839-841
+### code chunk number 54: intro.Rnw:843-845
 ###################################################
 p <- ppO2(pedro902)
 plot(p, type="l", ylab="PPO2 (atm)")
 
 
 ###################################################
-### code chunk number 55: intro.Rnw:847-848
+### code chunk number 55: intro.Rnw:851-852
 ###################################################
 oxtox(pedro902)
 
 
 ###################################################
-### code chunk number 56: intro.Rnw:870-873
+### code chunk number 56: intro.Rnw:874-877
 ###################################################
 nitrox(0.36)
 nitrox(1)
@@ -416,104 +416,104 @@ nitrox(0.21)
 
 
 ###################################################
-### code chunk number 57: intro.Rnw:882-883
+### code chunk number 57: intro.Rnw:886-887
 ###################################################
 trimix(0.18, 0.45)
 
 
 ###################################################
-### code chunk number 58: intro.Rnw:890-891
+### code chunk number 58: intro.Rnw:894-895
 ###################################################
 summary(nitrox(0.36))
 
 
 ###################################################
-### code chunk number 59: intro.Rnw:907-908
+### code chunk number 59: intro.Rnw:911-912
 ###################################################
 ead(24, nitrox(0.32))
 
 
 ###################################################
-### code chunk number 60: intro.Rnw:915-916
+### code chunk number 60: intro.Rnw:919-920
 ###################################################
 mod(nitrox(0.36), 1.5)
 
 
 ###################################################
-### code chunk number 61: intro.Rnw:922-923
+### code chunk number 61: intro.Rnw:926-927
 ###################################################
 maxmix(40, 1.5)
 
 
 ###################################################
-### code chunk number 62: intro.Rnw:931-932
+### code chunk number 62: intro.Rnw:935-936
 ###################################################
 END(40, trimix(0.18,0.5))
 
 
 ###################################################
-### code chunk number 63: intro.Rnw:954-955
+### code chunk number 63: intro.Rnw:958-959
 ###################################################
 dive(nitrox(0.32), c(30,20))
 
 
 ###################################################
-### code chunk number 64: intro.Rnw:963-964
+### code chunk number 64: intro.Rnw:967-968
 ###################################################
 dive(c(30,20), 5, nitrox(0.36), c(5,3))
 
 
 ###################################################
-### code chunk number 65: intro.Rnw:991-993
+### code chunk number 65: intro.Rnw:995-997
 ###################################################
 dive(nitrox(0.25), c(30, 20), c(5,3), c(0, 20))
 dive(nitrox(0.25), c(30, 20), c(5,3), 0, air, c(0, 20))
 
 
 ###################################################
-### code chunk number 66: intro.Rnw:1008-1009
+### code chunk number 66: intro.Rnw:1012-1013
 ###################################################
 d <- dive(c(30,20), c(5,5))
 
 
 ###################################################
-### code chunk number 67: intro.Rnw:1016-1017
+### code chunk number 67: intro.Rnw:1020-1021
 ###################################################
 tanklist(d) <- list(nitrox(0.32))
 
 
 ###################################################
-### code chunk number 68: intro.Rnw:1024-1025
+### code chunk number 68: intro.Rnw:1028-1029
 ###################################################
 d <- dive(air, c(30,40), 6, nitrox(0.5), c(6,3), c(3,3))
 
 
 ###################################################
-### code chunk number 69: intro.Rnw:1031-1032
+### code chunk number 69: intro.Rnw:1035-1036
 ###################################################
 tanklist(d) <- list(nitrox(0.32), nitrox(0.5))
 
 
 ###################################################
-### code chunk number 70: intro.Rnw:1038-1039
+### code chunk number 70: intro.Rnw:1042-1043
 ###################################################
 tanklist(d)[[1]] <- nitrox(0.32)
 
 
 ###################################################
-### code chunk number 71: intro.Rnw:1046-1047
+### code chunk number 71: intro.Rnw:1050-1051
 ###################################################
 tanklist(d) <- list(deep=nitrox(0.32), deco=nitrox(0.5))
 
 
 ###################################################
-### code chunk number 72: intro.Rnw:1053-1054
+### code chunk number 72: intro.Rnw:1057-1058
 ###################################################
 names(tanklist(d)) <- c("deep", "deco")
 
 
 ###################################################
-### code chunk number 73: intro.Rnw:1064-1067
+### code chunk number 73: intro.Rnw:1068-1071
 ###################################################
 TL <- list(travel=trimix(0.18, 0.45), deco=nitrox(0.6))
 d <- dive(tanklist=TL, tank="travel", c(30,40), 6, 
@@ -521,20 +521,44 @@ d <- dive(tanklist=TL, tank="travel", c(30,40), 6,
 
 
 ###################################################
-### code chunk number 74: intro.Rnw:1083-1084
+### code chunk number 74: intro.Rnw:1087-1088
 ###################################################
 whichtank(d)
 
 
 ###################################################
-### code chunk number 75: intro.Rnw:1092-1093
+### code chunk number 75: intro.Rnw:1096-1097
 ###################################################
 whichtank(d) <- ifelse(depths.dive(d) < 3, "travel", "deco")
 
 
 ###################################################
-### code chunk number 76: intro.Rnw:1099-1100
+### code chunk number 76: intro.Rnw:1103-1104
 ###################################################
 whichtank(d)[depths.dive(d) > 3] <- "travel"
+
+
+###################################################
+### code chunk number 77: intro.Rnw:1113-1116
+###################################################
+b <- dive(baron[,1:2])
+tanklist(b) <- list(travel=air, deco=nitrox(0.36))
+whichtank(b) <- ifelse(times.dive(b) <= 32, "travel", "deco")
+
+
+###################################################
+### code chunk number 78: intro.Rnw:1125-1129
+###################################################
+tanklist(b) <- list(travel=air, deco=nitrox(0.32), rich=nitrox(0.5))
+whichtank(b) <- "travel"
+whichtank(b)[times.dive(b) > 32] <- "deco"
+whichtank(b)[times.dive(b) > 37] <- "rich"
+
+
+###################################################
+### code chunk number 79: intro.Rnw:1134-1136
+###################################################
+whichtank(b) <- cut(times.dive(b), breaks=c(0, 32, 37, Inf),
+                    include.lowest=TRUE, labels=c("travel", "deco", "rich"))
 
 

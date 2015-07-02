@@ -1,3 +1,14 @@
+	CHANGES IN scuba VERSION 1.8-0
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+  o whichtank<-
+  The replacement value can be a single number or character string
+  indicating that the entire dive is performed on a single tank.
+
+  o whichtank<-
+  Now issues warnings in some circumstances,
+  to guard against common errors.
 
 	CHANGES IN scuba VERSION 1.7-0
 
