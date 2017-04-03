@@ -123,7 +123,7 @@ function(d,
     pressures <- 1 + depths/10
     profile <- if(progressive) numeric(n * ncomp * ngas) else numeric(1)
     final <- numeric(n * ncomp * ngas)
-    z <- .C("HaldaneCalc",
+    z <- .C(CscubaHaldaneCalc,
             ntimes   = as.integer(n),
             ntissues = as.integer(ncomp),
             ngases   = as.integer(ngas), 
@@ -134,8 +134,8 @@ function(d,
             ratecoefs = as.double(as.matrix(ratecoefs)),
             progressive = as.integer(progressive),
             profile = as.double(profile),
-            final = as.double(final)
-            )
+            final = as.double(final),
+	    PACKAGE = "scuba")
     state <- as.data.frame(matrix(z$final,
                                   nrow=nrow(state), ncol=ncol(state),
                                   dimnames=dimnames(state)))

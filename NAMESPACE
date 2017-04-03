@@ -65,13 +65,15 @@ export("timetaken")
 export("trimix")
 export("whichtank<-")
 export("whichtank")
-#
-useDynLib(scuba, "HaldaneCalc")
+# native routines are mapped to symbols in the namespace
+useDynLib(scuba, .registration=TRUE, .fixes="Cscuba")
+# dependencies
 importFrom("stats", "complete.cases", "uniroot", "approxfun")
 importFrom("graphics",
            "axis", "legend", "text", "par", "frame",
            "plot", "locator", "barplot", "mtext", "abline")
 importFrom("utils", "flush.console")
+# methods
 S3method("as.character","gas")
 S3method("as.data.frame", "hm")
 S3method("plot", "dive")
