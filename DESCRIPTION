@@ -1,6 +1,6 @@
 Package: scuba
-Version: 1.9-1
-Date: 2017-04-03
+Version: 1.10-0
+Date: 2020-05-15
 Title: Diving Calculations and Decompression Models
 Authors@R: c(person("Adrian", "Baddeley", role = c("aut", "cre"),
 		     email = "Adrian.Baddeley@curtin.edu.au"),
@@ -23,7 +23,8 @@ Description: Code for describing and manipulating scuba diving profiles
 	and for performing mixed gas calculations. 
 License: GPL (>= 2)
 LazyData: true
+ByteCompile: true
 NeedsCompilation: yes
-Packaged: 2017-04-03 05:47:28 UTC; 214132e
+Packaged: 2020-05-15 04:44:17 UTC; adrian
 Repository: CRAN
-Date/Publication: 2017-04-03 06:17:20 UTC
+Date/Publication: 2020-05-15 05:50:05 UTC

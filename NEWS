@@ -1,3 +1,25 @@
+	CHANGES IN scuba VERSION 1.10-0
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+  o Code now runs faster.
+
+  o Improvements to documentation.
+
+  o The package is now byte-compiled.
+  
+	CHANGES IN scuba VERSION 1.9-1
+
+OVERVIEW
+
+  o Updated package information (maintainer's address etc)
+  
+	CHANGES IN scuba VERSION 1.9-0
+
+OVERVIEW
+
+  o internal changes to satisfy CRAN.
+  
 	CHANGES IN scuba VERSION 1.8-0
 
 SIGNIFICANT USER-VISIBLE CHANGES

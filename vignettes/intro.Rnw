@@ -9,8 +9,8 @@
 \marginsize{2cm}{2cm}{2cm}{2cm}
 
 \newcommand{\pkg}[1]{\texttt{#1}}
-\newcommand{\bold}[1]{{\bf {#1}}}
-\newcommand{\R}{{\sf R}}
+\newcommand{\bold}[1]{\textbf{#1}}
+\newcommand{\R}{\textsf{R}}
 \newcommand{\code}[1]{\texttt{#1}}
 
 \begin{document}
@@ -25,7 +25,7 @@ sversion <- read.dcf(file = system.file("DESCRIPTION", package = "scuba"),
 
 \title{Introduction to the \texttt{scuba} package}
 \author{Adrian Baddeley}
-\date{Package version \texttt{\Sexpr{sversion}}\\ Last edited December 2013}
+\date{Package version \texttt{\Sexpr{sversion}}\\ Last edited May 2020}
 \maketitle
 
 
@@ -167,7 +167,8 @@ ndl(24)
 This says that the NDL is 31.5 minutes, and the controlling tissue (the tissue
 that determines the NDL) is tissue 3.
 
-In the \pkg{scuba} package, a {\bf breathing gas} such as air, nitrox or trimix
+In the \pkg{scuba} package, a \textbf{breathing gas} 
+such as air, nitrox or trimix
 is represented by a special dataset. These gas objects are easy to specify:
 for example the command \texttt{nitrox(0.32)} 
 specifies Nitrox 32 (containing 32\% oxygen and 68\% nitrogen).
@@ -605,7 +606,7 @@ durations.dive(d)[2] <- 25
 means that the diver now spends 25 minutes at the bottom instead of 20 minutes.
 This has the side-effect of changing the
 sequence of elapsed times \texttt{times.dive(d)}.
-Note that times are stored in {\bf minutes}.
+Note that times are stored in \textbf{minutes}.
 
 To extract only part of a dive profile, use \texttt{chop.dive}:
 <<>>=
@@ -827,12 +828,6 @@ abline(v=35, lty=2, col="green")
 par(opa)
 @ 
 
-Using other options to the \texttt{haldane} command, it is possible to
-calculate quantities such as the depth ceiling (the shallowest permissible depth
-given the diver's tissue saturation), the pressure ceiling (the lowest
-permissible ambient pressure given the diver's tissue saturation)
-and the washout (difference between
-nitrogen saturation and inspired nitrogen partial pressure).
 
 \subsection{Oxygen partial pressure and oxygen toxicity}
 
@@ -863,7 +858,7 @@ maximum of 850 OTU per day.
 
 \subsection{Gases}
 
-A {\bf breathing gas} is represented by an object of class \texttt{"gas"}.
+A \textbf{breathing gas} is represented by an object of class \texttt{"gas"}.
 The object \texttt{air} is a representation of compressed air
 (21\% oxygen, 79\% nitrogen) as an object of this class.
 (Don't reassign another value to this object!!!)
@@ -928,7 +923,8 @@ maxmix(40, 1.5)
 @ 
 
 \noindent 
-To find the equivalent narcotic depth a dive to 40 metres on Trimix 18/50
+To find the \emph{equivalent narcotic depth}
+of a dive to 40 metres on Trimix 18/50
 (i.e.\ the depth of a dive on compressed air that would
 have the same narcotic effect),
 
@@ -979,7 +975,7 @@ If you specify a dive profile on nitrox or trimix, and
 if part of the dive profile is at the surface (depth zero),
 then 
 \begin{quote}
-  {\bf the package will not assume you breathe air at the surface.}
+  \textbf{the package will not assume you breathe air at the surface.}
 \end{quote}
 The package doesn't automatically know
 whether you continued breathing from the regulator
@@ -1116,7 +1112,7 @@ tanklist(b) <- list(travel=air, deco=nitrox(0.36))
 whichtank(b) <- ifelse(times.dive(b) <= 32, "travel", "deco")
 @ 
 
-Note that {\bf elapsed times are always calculated in minutes} so the
+Note that \textbf{elapsed times are always calculated in minutes} so the
 last line above says that the gas switch occurs after 32 minutes.
 
 If there is more than one change of gas it might be easier to use
@@ -1136,14 +1132,14 @@ whichtank(b) <- cut(times.dive(b), breaks=c(0, 32, 37, Inf),
                     include.lowest=TRUE, labels=c("travel", "deco", "rich"))
 @ 
 
-(note again that the times are in {\bf minutes})
+(note again that the times are in \textbf{minutes})
 but this does not allow switching back to a previously-used gas
 (because labels are not allowed to be duplicated).
 
 \subsection{Decompression calculations}
 
 Decompression calculations (\texttt{haldane},
-\texttt{ndl}, \texttt{showstates})
+\texttt{ndl}, \texttt{showstates}, \texttt{deco.ceiling})
 also work with nitrox and trimix dives.
 
 Decompression calculations with trimix require a Haldane model
@@ -1155,10 +1151,118 @@ Helium diffusion.
 The total oxygen toxicity incurred during a nitrox or trimix dive
 can also be computed by \texttt{oxtox}.
 
+\subsection{Decompression ceiling and washout}
+
+If \texttt{haldane} is called with the argument \texttt{derived=TRUE},
+then it also calculates
+
+\begin{itemize}
+\item the depth ceiling (the shallowest permissible depth
+given the diver's tissue saturation)
+\item the pressure ceiling (the lowest
+permissible ambient pressure given the diver's tissue saturation)
+\item the washout (difference between
+nitrogen saturation and inspired nitrogen partial pressure).
+\end{itemize}
+
+These calculations require a tissue model that includes the
+M-value gradient parameter \texttt{dM}. The standard models 
+\texttt{"USN"}, \texttt{"Workman65"} and \texttt{"ZH-L16A"} 
+include this parameter, but the standard models \texttt{"Haldane"}
+and \texttt{"DSAT"} do not.
+<<>>=
+h <- haldane(deepmine, "Z", progressive=TRUE, derived=TRUE)
+@ 
+The ceilings and washout values 
+are returned as an attribute of the result of \texttt{haldane}. 
+<<>>=
+dh <- attr(h, "derived")
+@ 
+Then \texttt{dh} is a list containing the components
+\code{Dceiling} (depth ceiling), 
+\code{Pceiling} (pressure ceiling)
+and \code{washout} (washout), each of which
+is a vector, matrix or array of the same format as the result \texttt{h}.
+<<>>=
+dc <- dh[["Dceiling"]]
+@ 
+Alternatively the command \texttt{deco.ceiling} computes the depth
+ceiling or pressure ceiling from the result of \texttt{haldane}:
+<<>>=
+h <- haldane(deepmine, "Z", progressive=TRUE)
+dc <- deco.ceiling(h, "Z", what="depth")
+dim(dc)
+@ 
+The depth ceiling, pressure ceiling and washout values
+are computed separately for each tissue compartment,
+and separately for each inert gas.
+The dive includes obligatory decompression if the depth ceiling
+ever exceeds zero:
+<<>>=
+any(dc > 0)
+max(dc)
+@ 
+To determine the depth ceiling for the diver, we would compute the
+maximum over compartments and gases for each time:
+<<>>=
+dcmax <- apply(dc, 1, max)
+@ 
+The depth ceiling can be plotted over the dive profile, using a minus sign:
+<<fig=TRUE>>=
+plot(deepmine, legendpos="bottomright")
+lines(times.dive(deepmine), -dcmax, lty=2)
+@ 
+
+\section{Index of the \pkg{scuba} package}
+
+\begin{tabular}{ll}
+  \texttt{air} & representation of air as a breathing gas \\
+  \texttt{ascent} & specification of ascent rate or ascent time \\
+  \texttt{baron} & example dive profile \\
+  \texttt{bestdoubledive} & calculate longest double dive without decompression \\
+  \texttt{Bookspan} & tissue parameters for several decompression models \\
+  \texttt{BuehlmannL16A} & tissue parameters for Buehlmann model \\
+  \texttt{chop.dive} & cut off part of a dive \\
+  \texttt{deco.ceiling} & calculate decompression ceiling \\
+  \texttt{deepmine} & example dive profile \\
+  \texttt{depths.dive} & extract or change the depths involved in a dive \\
+  \texttt{descent} & specify a descent rate or descent time \\
+  \texttt{dive} & specify a dive profile \\
+  \texttt{durations.dive} & extract or change the durations of each stage of a dive \\
+  \texttt{ead} & equivalent air depth of a gas \\
+  \texttt{END} & equivalent narcotic depth of a gas \\
+  \texttt{haldane} & compute tissue saturations using Haldane equations \\
+  \texttt{Halftimes} & table of tissue half-times for standard decompression models \\
+  \texttt{hm} & specify a new decompression model of Haldane type \\
+  \texttt{is.nitrox} & check whether a gas is Nitrox \\
+  \texttt{maxmix} & richest nitrox mix for a given depth \\
+  \texttt{Mmix} & compute M-values for a mixture of gases \\
+  \texttt{mod} & maximum operating depth of a breathing gas \\
+  \texttt{Mvalues} & table of tissue M-values for standard Haldane models \\
+  \texttt{ndl} & no-decompression limit \\
+  \texttt{nitrox} & representation of nitrox as a breathing gas \\
+  \texttt{oxtox} & oxygen toxicity calculation \\
+  \texttt{param} & extract the tissue parameters from a model \\
+  \texttt{pedro} & example dive profile \\
+  \texttt{pickmodel} & choose one of the standard decompression models by name \\
+  \texttt{plot.dive} & plot a dive profile \\
+  \texttt{ppO2} & calculate partial pressure of O2 at each stage of a dive \\
+  \texttt{print.dive} & print a dive profile \\
+  \texttt{saturated.state} & compute the tissue saturations achieved in equilibrium \\
+  \texttt{scuba.constants} & constants used in the package \\
+  \texttt{scuba.disclaimer} & Read This Disclaimer! \\
+  \texttt{showstates} & interactively display the tissue saturations at each stage \\
+  \texttt{tanklist} & make a list of breathing gases for use in a dive \\
+  \texttt{times.dive} & extract or change the times at each stage of a dive \\
+  \texttt{trimix} & representation of trimix as a breathing gas \\
+  \texttt{whichtank} & determine which breathing gas is in use at each stage of a dive \\
+  \texttt{Workman65} & tissue parameters of the model of Workman, 1965.
+\end{tabular}
+
 \section*{Acknowledgements}
 
 The package was written by Adrian Baddeley
-\verb!<Adrian.Baddeley@uwa.edu.au>!
+\verb!<Adrian.Baddeley@curtin.edu.au>!
 with generous contributions and feedback from Vittorio Broglio,
 Pedro Antonio Neves, Peter Buzzacott and an anonymous diver.
 This package also incorporates results of joint research 
