@@ -15,8 +15,5 @@
     in dry air at 25 C
   }
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-}
+\author{\adrian.}
 \keyword{utilities}

@@ -41,8 +41,5 @@ durations.dive(d) <- value
    durations.dive(d)[2] <- 25
    d
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-}
+\author{\adrian.}
 \keyword{utilities}

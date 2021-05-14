@@ -77,11 +77,7 @@ bestdoubledive(d1, d2, surface = 30, verbose = FALSE, model = "D", asdive=TRUE)
   Classical theory of decompression and the design of scuba diving tables.
   \emph{The Mathematical Scientist} \bold{36}, 75-88.
 }
-\author{
-  Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-}
+\author{\adrian.}
 \seealso{
   \code{\link{pickmodel}}, 
   \code{\link{hm}}, 

@@ -30,8 +30,5 @@
   data(pedro)
   plot(ppO2(pedro902), type="l")
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-}
+\author{\adrian.}
 \keyword{utilities}

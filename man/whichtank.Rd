@@ -51,10 +51,7 @@ whichtank(d) <- value
   The value of \code{whichtank(d)} is a vector of integers or
   character strings.
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-}
+\author{\adrian.}
 \seealso{
   \code{\link{dive}},
   \code{\link{tanklist}}

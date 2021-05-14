@@ -99,8 +99,5 @@ deco.ceiling(state, model, what = c("depth", "pressure"))
    any(pressureceiling > 0.8)
    # immediate flying-after-diving is not safe
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-}
+\author{\adrian.}
 \keyword{utilities}

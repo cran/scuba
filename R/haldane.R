@@ -1,7 +1,7 @@
 #
 # 	haldane.R
 #
-#	$Revision: 1.33 $	$Date: 2013/12/10 11:39:04 $
+#	$Revision: 1.34 $	$Date: 2021/05/14 01:18:38 $
 #
 ####################################################################
 #
@@ -122,7 +122,7 @@ function(d,
     # use C code
     pressures <- 1 + depths/10
     profile <- if(progressive) numeric(n * ncomp * ngas) else numeric(1)
-    final <- numeric(n * ncomp * ngas)
+    final <- numeric(ncomp * ngas)
     z <- .C(CscubaHaldaneCalc,
             ntimes   = as.integer(n),
             ntissues = as.integer(ncomp),

@@ -1,3 +1,13 @@
+	CHANGES IN scuba VERSION 1.11-0
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+  o Package 'scuba' now depends on R version 3.5.0 or later.
+
+  o Internal changes to code to satisfy CRAN.
+
+  o Minor corrections in help files.
+  
 	CHANGES IN scuba VERSION 1.10-0
 
 SIGNIFICANT USER-VISIBLE CHANGES

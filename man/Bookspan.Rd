@@ -70,8 +70,5 @@
   Undersea and Hyperbaric Medicine Society, Kensington, Maryland (USA).
   ISBN 0-930406-13-3.
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-}
+\author{\adrian.}
 \keyword{utilities}

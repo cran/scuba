@@ -43,8 +43,5 @@
   # Trimix 15/50
   mod(trimix(0.15, 0.5))
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-}
+\author{\adrian.}
 \keyword{utilities}

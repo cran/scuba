@@ -38,8 +38,5 @@ times.dive(d) <- value
    times.dive(d) <- 1.1 * times.dive(d)
    d
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-}
+\author{\adrian.}
 \keyword{utilities}

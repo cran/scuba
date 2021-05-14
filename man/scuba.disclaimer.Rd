@@ -48,8 +48,5 @@
   the predictions of a theoretical physical model may not be correct
   predictions. 
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-}
+\author{\adrian.}
 \keyword{utilities}

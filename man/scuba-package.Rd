@@ -375,10 +375,7 @@
   Research Report 6-65. US Navy Experimental Diving Unit.
   Washington DC. 
 }
-\author{
-  Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
+\author{\adrian
   with contributions from Vittorio Broglio
   and Pedro Antonio Neves.
 }

@@ -41,8 +41,5 @@
   #            (18\% oxygen, 50\% helium) 
   END(30, trimix(0.18, 0.5))
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-}
+\author{\adrian.}
 \keyword{utilities}

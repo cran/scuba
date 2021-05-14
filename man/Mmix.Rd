@@ -91,10 +91,7 @@
   \code{depth}).
   Entries in the matrix are M-values in atmospheres absolute (ata).
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-}
+\author{\adrian.}
 \seealso{
   \code{\link{hm}}, 
   \code{\link{pickmodel}} for specifying models.

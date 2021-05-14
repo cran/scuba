@@ -41,8 +41,5 @@ chop.dive(d, t0=0, t1=max(times.dive(d)))
    # dive aborted at 10 minutes
    dive(chop.dive(d, 0, 10))
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-}
+\author{\adrian.}
 \keyword{utilities}

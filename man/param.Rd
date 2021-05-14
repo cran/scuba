@@ -47,8 +47,5 @@
    # halftimes for the DSAT model
    param(pickmodel("DSAT"), "N2", "HalfT")
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-}
+\author{\adrian.}
 \keyword{utilities}

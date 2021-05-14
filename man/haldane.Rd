@@ -266,8 +266,5 @@
   plot(times.dive(deepmine), der$washout[,"1b", "N2"],
         type="l", xlab="Time (min)", ylab="Washout")
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-}
+\author{\adrian.}
 \keyword{utilities}

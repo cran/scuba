@@ -53,8 +53,5 @@ saturated.state(model="D", depth = 0, g = air)
   fresh <- saturated.state()
   deep  <- saturated.state("ZH", 80, trimix(0.15, 0.5))
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-}
+\author{\adrian.}
 \keyword{utilities}

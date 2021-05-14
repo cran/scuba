@@ -38,8 +38,5 @@ depths.dive(d) <- value
    depths.dive(d)[2:3] <- 35
    d
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-}
+\author{\adrian.}
 \keyword{utilities}

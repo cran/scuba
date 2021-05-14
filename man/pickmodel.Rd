@@ -96,11 +96,7 @@ pickmodel(model)
   Research Report 6-65. US Navy Experimental Diving Unit.
   Washington DC. 
 }
-\author{
-  Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-}
+\author{\adrian.}
 \keyword{utilities}
 \seealso{
   \code{\link{ndl}},

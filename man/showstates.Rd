@@ -78,8 +78,5 @@
     showstates(dive(c(30,20), c(5,3)), "ZH")
   }
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-}
+\author{\adrian.}
 \keyword{utilities}

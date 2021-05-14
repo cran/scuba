@@ -77,10 +77,7 @@ ndl(depth, g=air, prevstate=NULL, model = "DSAT")
   identifies the controlling tissue (the tissue for which the M-value
   is reached).
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-}
+\author{\adrian.}
 \seealso{
   \code{\link{scuba.disclaimer}},
   \code{\link{haldane}},

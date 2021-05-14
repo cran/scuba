@@ -35,10 +35,7 @@ tanklist(d) <- value
   The value of \code{tanklist(d)} is a list whose elements are
   gases (objects of class \code{"gas"}). 
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-}
+\author{\adrian.}
 \seealso{
   \code{\link{dive}},
   \code{\link{nitrox}}

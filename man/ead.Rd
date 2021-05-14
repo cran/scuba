@@ -56,8 +56,5 @@
   # Nitrox II (36\% oxygen) at a range of depths
   ead(10:25, 0.36)
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-}
+\author{\adrian.}
 \keyword{utilities}

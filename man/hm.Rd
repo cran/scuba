@@ -165,8 +165,5 @@
   hm(c(10,20,60), rep(2 * 0.79, 3), rep(2 * 0.79, 3),
      He=list(HalfT=c(5,10,30), M0=c(1,1,1), dM=c(1,1,1)))
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-}
+\author{\adrian.}
 \keyword{utilities}

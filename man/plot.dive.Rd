@@ -69,8 +69,5 @@
   d4 <- dive(nitrox(0.30), baron[, 1:2])
   plot(d4, main="Baron Gautsch dive")
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-}
+\author{\adrian.}
 \keyword{utilities}
