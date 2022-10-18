@@ -1,7 +1,7 @@
 #
 # 	haldane.R
 #
-#	$Revision: 1.34 $	$Date: 2021/05/14 01:18:38 $
+#	$Revision: 1.36 $	$Date: 2022/03/28 08:37:19 $
 #
 ####################################################################
 #
@@ -175,14 +175,14 @@ function(d,
     fGasAll <- as.matrix(as.data.frame(fGasList))
     if(!progressive) {
       # inspired gas partial pressure at end of dive
-      ffGas <- matrix(fGasAll[n,], nrow=nrow(state), byrow=TRUE)
+      ffGas <- matrix(fGasAll[n,], nrow=nrow(state), ncol=ncol(state), byrow=TRUE)
       dimnames(ffGas) <- dimnames(state)
       ppGas <- ffGas * (1+depths[n]/10)
       # washout at surface
       washout <- state - ppGas
       # decompression ceiling
-      Pceiling <- deco.ceiling(profile, model, "pressure")
-      Dceiling <- deco.ceiling(profile, model, "depth")
+      Pceiling <- deco.ceiling(state, model, "pressure")
+      Dceiling <- deco.ceiling(state, model, "depth")
     } else {
       # inspired gas partial pressures (time x compartment x species)
       ffGas <- array(fGasAll, dim=c(n, rev(dim(state))))

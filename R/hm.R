@@ -1,7 +1,7 @@
 #
 # 	hm.R
 #
-#	$Revision: 1.24 $	$Date: 2013/12/09 06:00:43 $
+#	$Revision: 1.26 $	$Date: 2022/03/28 08:55:17 $
 #
 ################################################################
 #
@@ -44,6 +44,8 @@ hm <- local({
   # helper function to validate entries
   validate <- function(X, cnames, validnames=c("HalfT", "M0", "dM")) {
     Xname <- deparse(substitute(X))
+    if(is.null(X$M0) && !is.null(X$dM))
+      stop("If dM is provided, then M0 must be provided")
     isnull <- unlist(lapply(X, is.null))
     X <- X[!isnull]
     ok <- unlist(lapply(X, function(z) { is.numeric(z) && all(z > 0) }))
@@ -63,8 +65,6 @@ hm <- local({
                  "in list", sQuote(Xname), "- recognised names are",
                  commasep(dQuote(validnames))))
     }
-    if(with(X, is.null(M0) && !is.null(dM)))
-      stop("If dM is provided, then M0 must be provided")
     X <- as.data.frame(X)
     if(!is.null(cnames)) {
       if(length(cnames) != nrow(X))
@@ -134,7 +134,12 @@ print.summary.hm <- function(x, ...) {
 }
 
 as.data.frame.hm <- function(x, ...) {
-  as.data.frame(x$pars, ...)
+  p <- x$pars
+  y <- as.data.frame(p, ...)
+  colnames(y) <- paste(rep(names(p), lengths(p)),
+                       unlist(lapply(p, names)),
+                       sep=".")
+  return(y)
 }
 
 #################

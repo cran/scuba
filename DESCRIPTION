@@ -1,18 +1,20 @@
 Package: scuba
-Version: 1.11-0
-Date: 2021-05-14
+Version: 1.11-1
+Date: 2022-10-18
 Title: Diving Calculations and Decompression Models
 Authors@R: c(person("Adrian", "Baddeley", role = c("aut", "cre"),
 		     email = "Adrian.Baddeley@curtin.edu.au"),
 	      person("Vittorio", "Broglio", role = c("ctb","dtc")),
 	      person(c("Pedro", "Antonio"), "Neves", role = c("ctb", "dtc")),
 	      person("Andrew", "Bassom", role = "ctb"),
-	      person("Peter", "Buzzacott", role = "ctb"))
+	      person("Peter", "Buzzacott", role = "ctb"),
+	      person("Aren", "Leishman", role = "ctb"))
 Author: Adrian Baddeley [aut, cre],
   Vittorio Broglio [ctb, dtc],
   Pedro Antonio Neves [ctb, dtc],
   Andrew Bassom [ctb],
-  Peter Buzzacott [ctb]
+  Peter Buzzacott [ctb],
+  Aren Leishman [ctb]
 Maintainer: Adrian Baddeley <Adrian.Baddeley@curtin.edu.au>
 Depends: R (>= 3.5.0)
 Imports: utils, graphics, stats
@@ -25,6 +27,6 @@ License: GPL (>= 2)
 LazyData: true
 ByteCompile: true
 NeedsCompilation: yes
-Packaged: 2021-05-14 11:08:03 UTC; adrian
+Packaged: 2022-10-18 09:59:43 UTC; adrian
 Repository: CRAN
-Date/Publication: 2021-05-14 11:20:02 UTC
+Date/Publication: 2022-10-18 10:30:02 UTC

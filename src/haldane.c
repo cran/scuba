@@ -3,7 +3,7 @@
 
   Solve basic DE for Haldane model with piecewise linear pressure function
 
-  $Revision: 1.4 $ $Date: 2013/12/09 12:16:22 $
+  $Revision: 1.5 $ $Date: 2022/10/18 09:58:05 $
 
  */
 
@@ -16,13 +16,17 @@
 #define ARRAY(A,I,J,K,NI,NJ) A[I + NI * (J + NJ * K)]
 
 
-void HaldaneCalc(ntimes, ntissues, ngases, 
-		 initial, pressures, durations, gasfractions, ratecoefs,
-		 progressive, profile, final) 
-     int *ntimes, *ntissues, *ngases; 
-     double *initial, *pressures, *durations, *gasfractions, *ratecoefs;
-     int *progressive;
-     double *profile, *final;
+void HaldaneCalc(int    *ntimes,
+		 int    *ntissues,
+		 int    *ngases, 
+		 double *initial,
+		 double *pressures,
+		 double *durations,
+		 double *gasfractions,
+		 double *ratecoefs,
+		 int    *progressive,
+		 double *profile,
+		 double *final) 
 {
   int itime, jtissue, kgas, Ntimes, Ntissues, Ngases, Ntime1;
   double *state;

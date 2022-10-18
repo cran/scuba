@@ -1,3 +1,26 @@
+	CHANGES IN scuba VERSION 1.11-1
+
+OVERVIEW
+
+  o We thank Aren Leishman for contributions.
+
+  o Minor bug fixes.
+
+  o Minor changes to placate the package checker.
+  
+BUG FIXES
+
+  o hm
+  An error occurred if M0 was missing or NULL.
+  [Spotted by Aren Leishman.]
+  Fixed.
+
+  o haldane
+  An error occurred if progressive=FALSE and derived=TRUE.
+  [Spotted by Aren Leishman.]
+  Fixed.
+  
+  
 	CHANGES IN scuba VERSION 1.11-0
 
 SIGNIFICANT USER-VISIBLE CHANGES
